@@ -1,22 +1,16 @@
 ================================================================
 Campus Resource Reservation System
-Milestone 1 - Core System Development
-Class: [CSCE 2110]
-Instructor: [INSTRUCTOR NAME]
-Team: [TEAM NAME]
+Class: CSCE 2110
+Instructor: Bahareh Dorri
 ================================================================
 
 1. OVERVIEW
 ----------------------------------------------------------------
-[2-3 sentences: what the system does. Example: "A menu-driven
-command-line application that lets students reserve campus
-resources (study rooms, laptops, calculators, lab equipment,
-tutoring appointments) and lets administrators manage
-reservations, waiting lists, and cancellations."]
+A menu-based CLI app that allows students to reserve campus resources, i.e. study rooms, laptops, tutoring appointments, etc. and lets administrators manage reservations, waiting lists, and cancellations.
 
 2. TEAM MEMBERS
 ----------------------------------------------------------------
-- [NAME 1] - [role / components]
+- Logan Conrad - [role / components]
 - [NAME 2] - [role / components]
 - [NAME 3] - [role / components]
 
@@ -56,7 +50,7 @@ Project1/
 |   |-- resources.txt
 |   `-- reservations.txt
 |-- README.txt
-`-- Makefile [or compile.sh]
+`-- Makefile
 
 5. DATA STRUCTURES USED
 ----------------------------------------------------------------
@@ -97,5 +91,5 @@ reservations.txt line format:
     https://github.com/MrSpaghatti/2110_project_1
 
 ================================================================
-(C) 2026 [TEAM NAME]. All work original unless otherwise noted.
+All work original unless otherwise noted.
 ================================================================
