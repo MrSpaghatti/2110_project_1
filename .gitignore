@@ -1,0 +1,13 @@
+# Build artifacts
+reservation_system
+*.o
+*.exe
+*.out
+*.obj
+
+# Editor/OS junk
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
