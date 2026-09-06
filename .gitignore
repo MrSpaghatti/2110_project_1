@@ -8,6 +8,7 @@ reservation_system
 # Editor/OS junk
 .vscode/
 .idea/
+.clangd
 *.swp
 *~
 .DS_Store
