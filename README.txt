@@ -86,7 +86,17 @@ reservations.txt line format:
 - [e.g. one waiting list per resource enforced by the queue key]
 - [e.g. undo restores only the single most recent cancellation]
 
-10. GITHUB REPOSITORY
+10. DEVELOPMENT LOG
+----------------------------------------------------------------
+Per grading_note.md, individual contribution is graded separately; log work
+here as it is completed so each member can accurately report their part.
+
+format: date | member | work done | verified by
+
+2026-09-05 | [logan] | Resource.h: full class contract (fields, ctor, setter, getters, print) | compile-check
+2026-09-05 | [logan] | src/Resource.cpp: default+full ctor, 4 getters, setAvailable, print() | compile-check
+
+11. GITHUB REPOSITORY
 ----------------------------------------------------------------
     https://github.com/MrSpaghatti/2110_project_1
 
