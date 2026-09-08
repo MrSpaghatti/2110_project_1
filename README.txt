@@ -96,6 +96,7 @@ format: date | member | work done | verified by
 2026-09-05 | [logan] | Resource.h: full class contract (fields, ctor, setter, getters, print) | compile-check
 2026-09-05 | [logan] | src/Resource.cpp: default+full ctor, 4 getters, setAvailable, print() | compile-check
 2026-09-06 | [logan] | src/main.cpp: placeholder main() to prove link + run; full build works | make, "./reservation_system"
+2026-09-06 | [logan] | include/FileLoader.h + src/FileLoader.cpp: pipe-separated parser loading resources.txt into Resource objects (open-check, skip blanks, 4-field guard, Availability->bool) | make check
 
 11. GITHUB REPOSITORY
 ----------------------------------------------------------------
