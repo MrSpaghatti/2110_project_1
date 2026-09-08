@@ -31,6 +31,7 @@ Project1/
 |   |-- Resource.h
 |   |-- Reservation.h
 |   |-- Student.h
+|   |-- FileLoader.h
 |   |-- LinkedList.h
 |   |-- WaitingList.h
 |   |-- CancellationHistory.h
@@ -38,6 +39,7 @@ Project1/
 |   `-- ReportGenerator.h
 |-- src/
 |   |-- main.cpp
+|   |-- FileLoader.cpp
 |   |-- Resource.cpp
 |   |-- Reservation.cpp
 |   |-- Student.cpp
@@ -69,8 +71,9 @@ On the CELL machines:
 
 7. USAGE
 ----------------------------------------------------------------
-[1-2 sentences: menu order, how to create/cancel/undo a
-reservation, where data files must sit (data/)]
+Current status (Milestone 1 in progress): app builds and prints the project
+title; the menu is stubbed. Resource loading (src/FileLoader.cpp) is implemented
+but not yet wired into the menu. Data files must sit in data/.
 
 8. INPUT FILE FORMATS
 ----------------------------------------------------------------
@@ -79,12 +82,18 @@ resources.txt line format:
 reservations.txt line format:
     ReservationID|StudentID|StudentName|ResourceID|Date
 
-[Note anything your parser assumes, e.g. one record per line.]
+Parser assumptions: one record per line, fields split on '|', blank lines
+skipped, and lines with the wrong field count are skipped with an error
+printed to stderr. resources.txt Availability column maps 'Available' ->
+true, anything else -> false.
 
 9. KNOWN LIMITATIONS / ASSUMPTIONS
 ----------------------------------------------------------------
-- [e.g. one waiting list per resource enforced by the queue key]
-- [e.g. undo restores only the single most recent cancellation]
+- Only resource data loading is implemented so far; reservations loading is
+  WIP (FileLoader::loadReservations), and the menu/linked-list/queue/stack
+  features are not built yet (see DEVELOPMENT LOG).
+- FileLoader prints an error and returns an empty list if the data file
+  cannot be opened or every line fails validation.
 
 10. DEVELOPMENT LOG
 ----------------------------------------------------------------
@@ -96,7 +105,8 @@ format: date | member | work done | verified by
 2026-09-05 | [logan] | Resource.h: full class contract (fields, ctor, setter, getters, print) | compile-check
 2026-09-05 | [logan] | src/Resource.cpp: default+full ctor, 4 getters, setAvailable, print() | compile-check
 2026-09-06 | [logan] | src/main.cpp: placeholder main() to prove link + run; full build works | make, "./reservation_system"
-2026-09-06 | [logan] | include/FileLoader.h + src/FileLoader.cpp: pipe-separated parser loading resources.txt into Resource objects (open-check, skip blanks, 4-field guard, Availability->bool) | make check
+2026-09-08 | [logan] | include/FileLoader.h + src/FileLoader.cpp: pipe-separated parser loading resources.txt into Resource objects (open-check, skip blanks, 4-field guard, Availability->bool) | make check
+2026-09-08 | [logan] | src/main.cpp: wired FileLoader::loadResources into main; app now loads + prints all resources from data/resources.txt | make check, "./reservation_system"
 
 11. GITHUB REPOSITORY
 ----------------------------------------------------------------
