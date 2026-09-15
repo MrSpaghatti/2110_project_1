@@ -107,6 +107,7 @@ format: date | member | work done | verified by
 2026-09-06 | [logan] | src/main.cpp: placeholder main() to prove link + run; full build works | make, "./reservation_system"
 2026-09-08 | [logan] | include/FileLoader.h + src/FileLoader.cpp: pipe-separated parser loading resources.txt into Resource objects (open-check, skip blanks, 4-field guard, Availability->bool) | make check
 2026-09-08 | [logan] | src/main.cpp: wired FileLoader::loadResources into main; app now loads + prints all resources from data/resources.txt | make check, "./reservation_system"
+2026-09-08 | [logan] | src/main.cpp: full menu loop (display all resources, standby stubs for 2-6, quit; cin.clear/ignore guards bad input like letters) | make, "./reservation_system"
 
 11. GITHUB REPOSITORY
 ----------------------------------------------------------------
