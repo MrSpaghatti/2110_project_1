@@ -1,8 +1,14 @@
-// LinkedList.h — ACTIVE RESERVATION LIST
+// LinkedList.h — ACTIVE RESERVATION LIST (append-at-tail, O(1) insert)
 //
 // This class stores the currently-active reservations. The spec REQUIRES
 // a linked list here (proj_1.md "Linked List Implementation", line 338):
 // frequent insert/remove, dynamic size.
+//
+// DECISION (Logan, 2026-09-15): the list tracks BOTH a head AND a tail
+// node, and insert() appends at the TAIL in O(1) — the same queue-like
+// insert-at-back convenience the WaitingList gets from its back_ pointer.
+// Payoff: new/undone reservations land at the end, so display order matches
+// creation order, and nothing ever pays an O(n) walk just to append.
 //
 // Per DECISIONS.md D8, the node type lives INSIDE this header:
 //   struct ReservationNode { Reservation data; ReservationNode* next; };
@@ -11,26 +17,22 @@
 // The class declaration goes here. Required operations (proj_1.md says the
 // implementation "must support"):
 //
-//   LinkedList();                       // empty list
-//   ~LinkedList();                      // delete every node (no leaks)
-//   void insert(const Reservation& r);  // add a reservation to the list
+//   LinkedList();                 // empty list (head_ == tail_ == nullptr)
+//   ~LinkedList();                // delete every node (no leaks)
+//   void insert(const Reservation& r);  // APPEND at tail, O(1) — the design choice
 //   bool remove(const std::string& reservationId);  // delete first match, true if found
 //   Reservation* find(const std::string& reservationId);  // pointer to match or nullptr
-//   void display() const;               // print all reservations in order
-//   int size() const;                   // count of nodes (O(n) walk, or track a counter)
+//   void display() const;         // print all reservations head -> tail
+//   int size() const;             // count of nodes (O(n) walk, or track a counter)
 //
-// Design questions to settle BEFORE you type:
-//   1. Where does insert() put new nodes — head or tail? (Head is O(1).
-//      Tail keeps display order matching creation order but costs an O(n)
-//      walk unless you also keep a tail pointer.)
-//   2. find() returns a pointer so the caller can read fields. For the
-//      manager to MODIFY a found node later, a pointer (not a copy) is
-//      the right shape. Do NOT return by value here.
-//   3. remove() takes the ID string, matching the undo flow: the stack pops
-//      a Reservation, then the manager calls remove(thatReservation.getReservationId()).
+// Members: ReservationNode* head_;  ReservationNode* tail_;
 //
-// Big-O to remember for the writeup: insert O(1) at head, find/remove O(n),
-// display O(n), size O(n) without a counter.
+// The tail makes insert() trivial but it makes remove() bug-prone — read
+// the tail-maintenance rules in src/LinkedList.cpp before you type. Rule of
+// thumb: EVERY mutation of the list must leave head_ and tail_ both valid.
+//
+// Big-O to remember for the writeup: insert O(1) (tail pointer), remove
+// O(n) for the find, display/size O(n).
 //
 // Guard style, same as the other headers:
 //   #ifndef LINKEDLIST_H
