@@ -113,6 +113,9 @@ the same commit.
 - Consequence: `remove()` must maintain `tail_` when the match is the last
   node (and reset both pointers when the list empties) — every mutation
   leaves `head_` and `tail_` both valid.
+- `size()` uses a maintained counter (`count_`), so it is O(1) instead of an
+  O(n) walk. Cost: insert() increments, remove() decrements — keep both in
+  sync; a drift here silently corrupts every size-based report.
 
 ## Still to decide (open)
 

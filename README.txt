@@ -108,6 +108,7 @@ format: date | member | work done | verified by
 2026-09-08 | [logan] | include/FileLoader.h + src/FileLoader.cpp: pipe-separated parser loading resources.txt into Resource objects (open-check, skip blanks, 4-field guard, Availability->bool) | make check
 2026-09-08 | [logan] | src/main.cpp: wired FileLoader::loadResources into main; app now loads + prints all resources from data/resources.txt | make check, "./reservation_system"
 2026-09-08 | [logan] | src/main.cpp: full menu loop (display all resources, standby stubs for 2-6, quit; cin.clear/ignore guards bad input like letters) | make, "./reservation_system"
+2026-09-15 | [logan] | LinkedList: full implementation (ctor/dtor/insert/find/remove/display/size) with tail_ for O(1) append; O(1) count_ counter; remove() fixes tail_ on last-node match | make check, /tmp runtime harness (insert A,B,C, remove mid+tail, insert after tail, empty guards)
 
 11. GITHUB REPOSITORY
 ----------------------------------------------------------------
