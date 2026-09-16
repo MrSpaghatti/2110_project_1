@@ -104,9 +104,21 @@ the same commit.
   while keeping review overhead small.
 - Everyone must be able to explain their own code (academic-integrity rule).
 
+## D11 — LinkedList tracks a tail node for O(1) appends (2026-09-15)
+- The active-reservation `LinkedList` keeps both a `head_` and a `tail_`
+  pointer. `insert()` appends at the **tail** in O(1), same as a queue's
+  enqueue.
+- Why: new and undone reservations land at the end, so display order matches
+  creation order, and no insert ever pays an O(n) walk to reach the back.
+- Consequence: `remove()` must maintain `tail_` when the match is the last
+  node (and reset both pointers when the list empties) — every mutation
+  leaves `head_` and `tail_` both valid.
+- `size()` uses a maintained counter (`count_`), so it is O(1) instead of an
+  O(n) walk. Cost: insert() increments, remove() decrements — keep both in
+  sync; a drift here silently corrupts every size-based report.
+
 ## Still to decide (open)
 
-- Confirm the team roster + which member takes which functional area.
-- The file parser: the data files look pipe-separated (`R101|Study Room
-101|Study Room|Available`); confirm the split character when the loader is
-  written.
+- Confirm the team roster + which member takes which functional area. (Status
+  2026-09-15: Hoang = Reservation/Student, Matthew = WaitingList, Logan =
+  LinkedList/CancellationHistory/ReservationManager/ReportGenerator + main.)
