@@ -120,5 +120,11 @@ the same commit.
 ## Still to decide (open)
 
 - Confirm the team roster + which member takes which functional area. (Status
-  2026-09-15: Hoang = Reservation/Student, Matthew = WaitingList, Logan =
-  LinkedList/CancellationHistory/ReservationManager/ReportGenerator + main.)
+  2026-09-15: lanes CLAIMED on Discord, work NOT done yet —
+    Hoang: Student.cpp, CancellationHistory.h/.cpp
+    OJ:    ReservationManager.h/.cpp
+    Logan: LinkedList (DONE, committed) + ReportGenerator + main)
+- Documentation pass DEFERRED (2026-09-15): comment hygiene flagged by Copilot
+  review — stale "struct goes here" line in LinkedList.h, detached tail-rules
+  fragment in LinkedList.cpp. Known, acknowledged, will fix in a later pass;
+  not blocking the LinkedList commit (code verified correct under ASan).

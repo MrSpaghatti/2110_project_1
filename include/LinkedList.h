@@ -27,8 +27,7 @@ public:
     int size() const;
 
 private:
-    // struct goes here (DECISIONS.md D8 — the node lives INSIDE this header, only the list touches it):
-    struct ReservationNode { Reservation data; ReservationNode* next; };
+    struct ReservationNode { Reservation data; ReservationNode* next = nullptr; };
 
     ReservationNode* head_;
     ReservationNode* tail_;
