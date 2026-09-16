@@ -1,34 +1,61 @@
-// CancellationHistory.h — UNDO STACK (LIFO)
-//
-// When a reservation is cancelled it gets pushed here; undo pops the MOST
-// RECENT one back out. Spec (proj_1.md line 78): "Only the most recently
-// cancelled reservation may be restored." That's the whole job — a stack.
-//
-// Class declaration goes here. Required operations:
-//
-//   CancellationHistory();         // empty stack
-//   ~CancellationHistory();        // free all nodes
-//   void push(const Reservation& r);          // store a cancelled reservation
-//   Reservation pop();             // remove+return the most recent (top)
-//   bool isEmpty() const;          // true when nothing to undo
-//   int size() const;              // how many cancellations are stored
-//   void display() const;          // print history (rubric wants a display)
-//
-// Design questions to settle BEFORE you type:
-//   1. What does pop() do on an EMPTY stack? Your teammate left the same
-//      question open in WaitingList::dequeue(). Pick a convention and use
-//      it in BOTH classes so ReservationManager only has to learn one rule.
-//      (Options: return a default Reservation and rely on isEmpty(), or use
-//      a bool success flag via reference param.)
-//   2. Does undo even restore availability? No — think about it: popping a
-//      cancellation means the reservation is active again, so the resource
-//      becomes UNAVAILABLE again. That logic lives in ReservationManager
-//      (menu option 4), not here. This class only stores and pops records.
-//
-// The node struct lives inside this header, same deal as D8 for LinkedList:
-//   struct Node { Reservation data; Node* next; };
-// Stack points at the TOP. Push = new node -> old top. Pop = unlink top.
-//
-// Big-O for the writeup: push O(1), pop O(1) — that's why undo is a stack.
-//
-// Guard + std:: style: same as the other headers.
+// Last-In, First-Out stack of cancelled reservations
+#ifndef CANCELLATIONHISTORY_H
+#define CANCELLATIONHISTORY_H
+
+#include "Reservation.h"
+
+// Node used to store one cancelled reservation.
+struct CancellationNode
+{
+    // Stored cancelled Reservation object
+    Reservation data;
+
+    // Pointer to the next CancellationNode down in the stack
+    CancellationNode* next;
+
+    // Constructor to quickly initialize a node
+    CancellationNode(const Reservation& res, CancellationNode* nextNode = nullptr)
+        : data(res), next(nextNode) {}
+};
+
+
+class CancellationHistory
+{
+public:
+
+    // Constructor: Initializes the stack so it starts empty.
+    CancellationHistory();
+
+    // Destructor: Deletes all nodes currently in the stack to prevent memory leaks.
+    ~CancellationHistory();
+
+    // Push: Adds a cancelled reservation to the TOP of the stack.
+    void push(const Reservation &reservation);
+
+    // Pop: Removes the most recently cancelled reservation (TOP).
+    // Returns true if successfully popped, false if stack was empty.
+    bool pop();
+
+    // Top: Looks at the most recently cancelled reservation without removing it.
+    // Returns a pointer to the top Reservation, or nullptr if empty.
+    Reservation* top();
+
+    // IsEmpty: Determines whether the stack is empty.
+    bool isEmpty() const;
+
+    // Display: Displays cancellation history from TOP to BOTTOM.
+    void display() const;
+
+    // Size: Returns the number of cancelled reservations stored.
+    int size() const;
+
+private:
+
+    // Pointer to the top node of the stack.
+    CancellationNode* topNode;
+
+    // Running count of nodes in the stack.
+    int count;
+};
+
+#endif
