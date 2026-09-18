@@ -1,3 +1,13 @@
+/**
+ * Program Name: Reservation.cpp
+ * Assigned Member: Hoang Trung Le
+ * Student Id: 11949817
+ * Description: Implements the member functions for the Reservation class. It sets up 
+ *              both constructors to initialize member variables, provides getter methods 
+ *              so other parts of the program can access private reservation data, and 
+ *              includes a print function to output formatted details to the console.
+ */
+
 #include "Reservation.h"
 #include <iostream>
 

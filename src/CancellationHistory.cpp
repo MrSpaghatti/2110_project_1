@@ -1,4 +1,9 @@
-#include "CancellationHistory.h"
+/***********************************************************************************
+ * Program Name: CancellationHistory.cpp
+ * Assigned Member: Hoang Trung Le
+ * Student Id: 11949817
+
+Decription:
 // src/CancellationHistory.cpp — implement the UNDO STACK here.
 //
 // This is the second data structure you own, and it's the EASIEST one:
@@ -28,6 +33,10 @@
 #include "CancellationHistory.h"
 #include <iostream>
 
+ * *******************************************************************************
+ */
+#include "CancellationHistory.h"
+#include <iostream>
 // Constructor
 CancellationHistory::CancellationHistory()
     : topNode(nullptr), count(0)

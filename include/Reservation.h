@@ -1,3 +1,13 @@
+/****************************************************************
+ * Program Name: Reservation.h
+ * Assigned Member: Hoang Trung Le
+ * Student Id: 11949817
+ * Description: Header file for the Reservation class. This acts as our main data model 
+ *              to store details about a single booking, like the reservation ID, student 
+ *              info, resource ID, and date. It provides getter functions to access these 
+ *              private attributes and a print method to display the reservation details.
+ **/
+
 #ifndef RESERVATION_H
 #define RESERVATION_H
 

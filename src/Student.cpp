@@ -1,3 +1,12 @@
+/**
+ * Program Name: Student.cpp
+ * Assigned Member: Hoang Trung Le
+ * Student Id: 11949817
+ * Description: Contains the function definitions for the Student class. It initializes 
+ *              student objects with default or custom IDs and names, defines getter 
+ *              methods for data retrieval, and handles basic console output.
+ */
+
 #include "Student.h"
 #include <iostream>
 
