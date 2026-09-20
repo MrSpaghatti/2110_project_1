@@ -14,10 +14,22 @@ bool ReservationManager::loadData(
     const string &reservationsPath
 ) {
   resources_ = FileLoader::loadResources(resourcesPath);
+  active_ = FileLoader::loadReservations(reservationsPath);
+  for ( const auto& res : active_) {
+    for (auto &resource : resources_) {
+      if (resource.getId() == res.resourceId) {
+        resource.setAvailable(false);
+      }
+    }
+  }
+  if (resources_.empty()) {
+      return false;
+  }
+  return true;
+}
   // then parse reservations.txt into active_ and mark matched resources
   // unavailable. Return false on a failed load.
-  return false;
-}
+
 
 vector<Resource> ReservationManager::getResources() const {
   return resources_;
