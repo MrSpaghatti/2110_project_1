@@ -105,9 +105,9 @@ bool ReservationManager::cancelReservation(const string &reservationId) {
   history_.push(*match);          // remember for undo (graded stack)
   active_.remove(reservationId);  // take it out of the active list
 
+  // nobody waiting -> the slot just opens (availability derives from
+  // active_, no flag to flip); someone waiting -> promote them now.
   if (waitingQueues_[resourceId].isEmpty()) {
-      // nobody waiting — slot simply opens up (availability is derived
-      // from active_ now, so there is no flag to flip)
   } else {
       processWaitingList(resourceId);
   }
@@ -115,6 +115,8 @@ bool ReservationManager::cancelReservation(const string &reservationId) {
 }
 
 
+// LIFO restore: newest cancel first. If a student is already waiting on
+// that resource, the slot goes to them instead of back to the original.
 bool ReservationManager::undoCancellation() {
   if (history_.isEmpty()) {
     cout << "No cancellations to undo." << endl;
@@ -131,6 +133,8 @@ bool ReservationManager::undoCancellation() {
   return true;
 }
 
+// operator[] creates the queue on first use, then enqueue appends to the
+// back so the longest-waiting student is served first.
 void ReservationManager::addToWaitingList(
     const string &studentId,
     const string &studentName,
@@ -139,6 +143,8 @@ void ReservationManager::addToWaitingList(
     waitingQueues_[resourceId].enqueue(entry);
     }
 
+// promote the longest-waiting student; the slot stays booked, so the
+// resource itself never flips back to "available" here.
 void ReservationManager::processWaitingList(const string &resourceId) {
   WaitingList &q = waitingQueues_[resourceId];
   if (q.isEmpty()) return;

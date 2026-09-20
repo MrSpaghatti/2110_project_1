@@ -19,6 +19,7 @@ LinkedList::~LinkedList(){
     head_ = tail_;
 }
 
+// O(1) tail append (D11): new node goes after tail_, then tail_ advances.
 void LinkedList::insert(const Reservation& r){
     ReservationNode* newNode = new ReservationNode;
     newNode->data = r;
@@ -32,9 +33,8 @@ void LinkedList::insert(const Reservation& r){
     count_++;
 }
 
-// 4. find(): walk from head_ comparing getReservationId(). Return pointer
-//    to the node's data, or nullptr if you reach the end. (Unchanged by
-//    the tail — tail only helps insertion.)
+// walk from head_ matching reservationId; returns pointer to the node's
+// data, or nullptr if the walk ends. tail_ only helps insert, not find.
 Reservation* LinkedList::find(const string& reservationId){
     ReservationNode* current = head_;
     while (current != nullptr){
@@ -45,10 +45,8 @@ Reservation* LinkedList::find(const string& reservationId){
     }
     return nullptr;
 }
-//      - If the match IS the last node (match == tail_): move tail_ back to
-//        prev (or nullptr if it was also the head). Forgetting this leaves
-//        tail_ dangling, and the NEXT insert() writes through a dead pointer.
-//      - If the list becomes empty after removal: head_ = tail_ = nullptr.
+// unlink the match; if it WAS the tail, move tail_ back to prev (or
+// nullptr) so the next insert() doesn't write through a dead pointer.
 bool LinkedList::remove(const string& reservationId){
     if (head_ == nullptr){
         return false;
@@ -79,8 +77,7 @@ bool LinkedList::remove(const string& reservationId){
     count_--;
     return true;
 }
-// 6. display(): walk head -> tail calling r.print() on each Reservation —
-//    Reservation::print() already exists with the nice aligned format.
+// walk head -> tail, printing each reservation in list order.
 void LinkedList::display() const{
     ReservationNode* current = head_;
     while (current != nullptr){
@@ -90,6 +87,7 @@ void LinkedList::display() const{
     return;
 }
 
+// live per-resource count for menu 1 (D14): walk and count matches.
 int LinkedList::countFor(const string& resourceId) const {
     int n = 0;
     ReservationNode* current = head_;
@@ -100,11 +98,12 @@ int LinkedList::countFor(const string& resourceId) const {
     return n;
 }
 
-// 7. size() O(1)
+// O(1): count_ maintained counter, no walk (D11).
 int LinkedList::size() const{
     return count_;
 }
 
+// same resource+date with any time overlap = conflict; empty time = no constraint (D12).
 bool LinkedList::hasConflict(const std::string& resourceId,const std::string& date,const std::string& startTime,const std::string& endTime) const {
     ReservationNode* current = head_;
     while (current != nullptr){

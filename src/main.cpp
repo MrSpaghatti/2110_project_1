@@ -54,6 +54,8 @@ int main() {
                 cout << "Enter end time (HH:MM, 0 for none): ";
                 cin >> endTime;
 
+                // "0" typed = no constraint; store as "" because hasConflict
+                // treats empty as "skip this check" (D12 convention).
                 if (date == "0") date = "";
                 if (startTime == "0") startTime = "";
                 if (endTime == "0") endTime = "";
