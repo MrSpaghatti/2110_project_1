@@ -112,6 +112,7 @@ format: date | member | work done | verified by
 2026-09-17 | [matthew] | WaitingList: full FIFO queue implementation (ctor/dtor/enqueue/dequeue/front/display/isEmpty/size) with front_/back_ pointers; handles empty enqueue (sets both ends) and last-item dequeue (clears back_) | g++ -Wall, runtime harness (enqueue A,B,C, dequeue order, empty guards)
 2026-09-17 | [matthew] | ReservationManager: redesigned without LinkedList/Reservation deps; stores ReservationData struct in vectors (active_/history_) + map<resourceId, WaitingList>; implemented create/cancel/undo/processWaitingList/find/search/sort w/ merge conflict resolution | g++ -Wall, full project syntax check
 2026-09-17 | [matthew] | Set up local MinGW (g++ 16.1.0) toolchain on Windows; project compiles and links locally; pushed commits to origin/main after rebasing onto teammate work | build + run, git push
+2026-09-19 | [matthew] | ReservationManager refactor: rebased feature/load-data onto main; deleted ReservationData struct, active_/history_ are now std::vector<Reservation>; loadData and menu ops updated to Reservation getters (getReservationId, getStudentId, getStudentName, getResourceId, getDate); isAvailable() marking kept | make check, full build + smoke test
 
 
 2026-09-16 | [Hoang Trung Le] | Reservation.h and src/Reservation.cpp:
