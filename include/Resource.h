@@ -33,7 +33,7 @@ public:
   setAvailable(bool available); // flip when a reservation is created/cancelled;
                                 // also used by undo to restore availability.
 
-  void print(int activeCount = 0) const;
+  void print(int activeCount = 0, bool busyNow = false) const;
                                 // one formatted row for the "View Resources" menu.
                                 // prints "Available"/"Unavailable" instead of 1/0 so the
                                 // output reads like the input file.
