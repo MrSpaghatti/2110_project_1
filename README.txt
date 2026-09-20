@@ -89,16 +89,24 @@ true, anything else -> false.
 
 9. KNOWN LIMITATIONS / ASSUMPTIONS
 ----------------------------------------------------------------
-- Only resource data loading is implemented so far; reservations loading is
-  WIP (FileLoader::loadReservations), and the menu/linked-list/queue/stack
-  features are not built yet (see DEVELOPMENT LOG).
+- Seed data (data/reservations.txt) is date-only; reservations loaded from
+  file carry empty start/end times. Empty times mean "no time constraint":
+  LinkedList::hasConflict skips the overlap check when any time is empty.
+- ReservationManager stores active reservations in std::vector<Reservation>
+  and cancellation history in a vector stack. The LinkedList and
+  CancellationHistory classes are implemented and compile, but are not yet
+  exercised by the manager's runtime flow (open team decision, see
+  DECISIONS.md).
+- The create-reservation menu path collects student/name/resource; full
+  date + time capture at creation is not yet wired (see DECISIONS.md).
 - FileLoader prints an error and returns an empty list if the data file
   cannot be opened or every line fails validation.
 
 10. DEVELOPMENT LOG
 ----------------------------------------------------------------
-Per grading_note.md, individual contribution is graded separately; log work
-here as it is completed so each member can accurately report their part.
+Individual contribution is graded separately per the professor's grading
+note; log work here as it is completed so each member can accurately
+report their part.
 
 format: date | member | work done | verified by
 
@@ -109,6 +117,11 @@ format: date | member | work done | verified by
 2026-09-08 | [logan] | src/main.cpp: wired FileLoader::loadResources into main; app now loads + prints all resources from data/resources.txt | make check, "./reservation_system"
 2026-09-08 | [logan] | src/main.cpp: full menu loop (display all resources, standby stubs for 2-6, quit; cin.clear/ignore guards bad input like letters) | make, "./reservation_system"
 2026-09-15 | [logan] | LinkedList: full implementation (ctor/dtor/insert/find/remove/display/size) with tail_ for O(1) append; O(1) count_ counter; remove() fixes tail_ on last-node match | make check, /tmp runtime harness (insert A,B,C, remove mid+tail, insert after tail, empty guards)
+2026-09-19 | [logan] | LinkedList::hasConflict(resourceId, date, startTime, endTime): O(n) walk, same resource+date test, time-overlap check, skips check when any time is empty ("" = no constraint) | make check, /tmp hasconflict harness (overlap -> TRUE, diff date -> FALSE)
+2026-09-19 | [logan] | Reservation: added D12 time fields startTime_/endTime_ ("HH:MM" style, "" = no constraint), 7-param full ctor, getStartTime()/getEndTime() | make check
+2026-09-19 | [logan] | src/main.cpp: wired menu cases 2-6 to ReservationManager (create/cancel/undo/search/display) | make check, full build
+2026-09-19 | [logan] | FileLoader.h renamed loadReservations doc comment + dropped WIP marker; DECISIONS.md consolidated (resolved D12 threads, roster status); README roster completed | make check
+2026-09-19 | [logan] | Merge-chain coordination: test-merged teammate branches before merging (PRs #6/#12/#13/#14 all green), drafted the ReservationData->vector<Reservation> refactor brief for OJ, cleaned stray roster line on feature/load-data | test merges + make check
 2026-09-17 | [matthew] | WaitingList: full FIFO queue implementation (ctor/dtor/enqueue/dequeue/front/display/isEmpty/size) with front_/back_ pointers; handles empty enqueue (sets both ends) and last-item dequeue (clears back_) | g++ -Wall, runtime harness (enqueue A,B,C, dequeue order, empty guards)
 2026-09-17 | [matthew] | ReservationManager: redesigned without LinkedList/Reservation deps; stores ReservationData struct in vectors (active_/history_) + map<resourceId, WaitingList>; implemented create/cancel/undo/processWaitingList/find/search/sort w/ merge conflict resolution | g++ -Wall, full project syntax check
 2026-09-17 | [matthew] | Set up local MinGW (g++ 16.1.0) toolchain on Windows; project compiles and links locally; pushed commits to origin/main after rebasing onto teammate work | build + run, git push
