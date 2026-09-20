@@ -5,10 +5,9 @@ using namespace std;
 
 int main() {
     // Load the catalog ONCE, before the loop. Every menu option that needs
-    // the resource list reads from this vector — do NOT re-read the file
-    // inside each option.
-    vector<Resource> resources = FileLoader::loadResources("data/resources.txt");
-
+    // the resource list reads from the manager — do NOT re-read the file
+    // inside each option, and do NOT keep a second local vector (the
+    // availability text shown must agree with what createReservation checks).
     ReservationManager manager;
     manager.loadData("data/resources.txt", "data/reservations.txt");
 
@@ -30,15 +29,16 @@ int main() {
 
         switch (choice) {
             case 1:
-                for (size_t i = 0; i < resources.size(); ++i){
-                    resources[i].print();
-                }
+                manager.displayResources();
                 break;
 
             case 2: {
                 string studentId;
                 string studentName;
                 string resourceId;
+                string date;
+                string startTime;
+                string endTime;
 
                 cout << "Enter student ID: ";
                 cin >> studentId;
@@ -46,8 +46,19 @@ int main() {
                 cin >> studentName;
                 cout << "Enter resource ID: ";
                 cin >> resourceId;
+                cout << "Enter date (MM/DD/YYYY, 0 for none): ";
+                cin >> date;
+                cout << "Enter start time (HH:MM, 0 for none): ";
+                cin >> startTime;
+                cout << "Enter end time (HH:MM, 0 for none): ";
+                cin >> endTime;
 
-                if (manager.createReservation(studentId, studentName, resourceId)){
+                if (date == "0") date = "";
+                if (startTime == "0") startTime = "";
+                if (endTime == "0") endTime = "";
+
+                if (manager.createReservation(studentId, studentName, resourceId,
+                                              date, startTime, endTime)){
                     cout << "Reservation created." << endl;
                 } else {
                     cout << "Unavailable - added to waiting list." << endl;

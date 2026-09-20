@@ -14,14 +14,15 @@ bool ReservationManager::loadData(
     const string &reservationsPath
 ) {
   resources_ = FileLoader::loadResources(resourcesPath);
-  active_ = FileLoader::loadReservations(reservationsPath);
-  for ( const auto& res : active_) {
-    for (auto &resource : resources_) {
-      if (resource.getId() == res.getResourceId()) {
-        resource.setAvailable(false);
-      }
-    }
+  vector<Reservation> loaded = FileLoader::loadReservations(reservationsPath);
+  for (const auto& res : loaded) {
+    active_.insert(res);
   }
+  // D12 (2026-09-19): do NOT flip Resource availability flags here. A
+  // resource is "available" for a given date/time iff no ACTIVE reservation
+  // conflicts with it — checked at createReservation time via
+  // LinkedList::hasConflict. The file's "Unavailable" text is display
+  // metadata only.
   if (resources_.empty()) {
       return false;
   }
@@ -32,10 +33,6 @@ vector<Resource> ReservationManager::getResources() const {
   return resources_;
 }
 
-vector<Reservation> ReservationManager::getActiveReservations() const {
-  return active_;
-}
-
 void ReservationManager::displayResources() const {
   cout << "===== Resources =====" << endl;
   for (const auto& r : resources_) {
@@ -44,58 +41,56 @@ void ReservationManager::displayResources() const {
 }
 
 void ReservationManager::displayActiveReservations() const {
-  for (const auto& res : active_){
-      cout << res.getReservationId() << " | " << res.getStudentId() << " | " << res.getStudentName() << " | " << res.getResourceId() << endl;
-    
-  }
+  active_.display();
 }
 
 bool ReservationManager::createReservation(
     const string &studentId,
     const string &studentName,
-    const string &resourceId
+    const string &resourceId,
+    const string &date,
+    const string &startTime,
+    const string &endTime
 ) {
-    for (auto& r : resources_) {
+    // 1. Resource must exist.
+    bool found = false;
+    for (const auto& r : resources_) {
         if (r.getId() == resourceId) {
-            if (r.isAvailable()) {
-                // create a new reservation and add to active_
-                string resId = "RES" + to_string(active_.size() + 1);
-                active_.push_back(Reservation(resId, studentId, studentName, resourceId, "", "", ""));
-                r.setAvailable(false);
-                return true;
-            } else {
-                // resource is busy, add to waiting list
-                addToWaitingList(studentId, studentName, resourceId);
-                return false;
-            }
+            found = true;
+            break;
         }
     }
-    return false;
+    if (!found) {
+        return false;
+    }
+
+    // 2. D12 gate: accept only when no ACTIVE reservation conflicts on
+    //    resource + date + time. Availability is derived, not a flag.
+    if (active_.hasConflict(resourceId, date, startTime, endTime)) {
+        // resource is busy for that slot — add to waiting list
+        addToWaitingList(studentId, studentName, resourceId);
+        return false;
+    }
+
+    // 3. Free slot: create a new reservation and append to the LinkedList.
+    string resId = "RES" + to_string(active_.size() + 1);
+    active_.insert(Reservation(resId, studentId, studentName,
+                               resourceId, date, startTime, endTime));
+    return true;
 }
 
 bool ReservationManager::cancelReservation(const string &reservationId) {
-  auto it = active_.end();
-  for (auto i = active_.begin(); i != active_.end(); ++i) {
-    if (i->getReservationId() == reservationId) {
-      it = i;
-      break;
-    }
-  }
-  if (it == active_.end()) {
+  Reservation* match = active_.find(reservationId);
+  if (match == nullptr) {
       return false;
   }
-  string resourceId = it->getResourceId();
-  history_.push_back(*it);
-  active_.erase(it);
+  string resourceId = match->getResourceId();
+  history_.push(*match);          // remember for undo (graded stack)
+  active_.remove(reservationId);  // take it out of the active list
 
-  
   if (waitingQueues_[resourceId].isEmpty()) {
-      for (auto& r : resources_) {
-          if (r.getId() == resourceId) {
-              r.setAvailable(true);
-              break;
-          }
-      }
+      // nobody waiting — slot simply opens up (availability is derived
+      // from active_ now, so there is no flag to flip)
   } else {
       processWaitingList(resourceId);
   }
@@ -104,22 +99,17 @@ bool ReservationManager::cancelReservation(const string &reservationId) {
 
 
 bool ReservationManager::undoCancellation() {
-  if (history_.empty()) {
+  if (history_.isEmpty()) {
     cout << "No cancellations to undo." << endl;
     return false;
   }
-  Reservation last = history_.back();
-  history_.pop_back();
-  if (!waitingQueues_[last.getResourceId()].isEmpty()) {
-    processWaitingList(last.getResourceId());
+  Reservation* last = history_.top();
+  Reservation lastCopy = *last;
+  history_.pop();
+  if (!waitingQueues_[lastCopy.getResourceId()].isEmpty()) {
+    processWaitingList(lastCopy.getResourceId());
   } else {
-    active_.push_back(last);
-    for (auto& r : resources_) {
-      if (r.getId() == last.getResourceId()) {
-          r.setAvailable(false);
-          break;
-      }
-    }
+    active_.insert(lastCopy);
   }
   return true;
 }
@@ -137,13 +127,8 @@ void ReservationManager::processWaitingList(const string &resourceId) {
   if (q.isEmpty()) return;
   WaitingEntry e = q.dequeue();
   string resId = "RES" + to_string(active_.size() + 1);
-  active_.push_back(Reservation(resId, e.studentId, e.studentName, resourceId, "", "", ""));
-  for (auto& r : resources_) {
-      if ( r.getId() == resourceId) {
-            r.setAvailable(false);
-            break;
-      }
-  }
+  active_.insert(Reservation(resId, e.studentId, e.studentName,
+                             resourceId, "", "", ""));
 }
 
 void ReservationManager::displayWaitingLists() const {
@@ -156,18 +141,12 @@ void ReservationManager::displayWaitingLists() const {
 }
 
 void ReservationManager::displayCancellationHistory() const {
-  for (const auto& res : history_) {
-    cout << res.getReservationId() << " | " << res.getStudentId() << " | " << res.getStudentName() << " | " << res.getResourceId() << endl;
-  }
+  history_.display();
 }
 
 bool ReservationManager::findReservation(const string &id) const {
-  for (const auto& res : active_) {
-    if (res.getReservationId() == id) {
-      return true;
-    }
-  }
-  return false;
+  Reservation* r = const_cast<LinkedList&>(active_).find(id);
+  return r != nullptr;
 }
 
 bool ReservationManager::findResource(const string &id) const {
