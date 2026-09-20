@@ -137,6 +137,39 @@ This matches the design already in place (D6, D11, and the WaitingList /
 CancellationHistory contracts). Two points from the announcement are NOT yet
 in the code, see open threads below.
 
+## D13 — Availability is derived, not a flag (2026-09-19)
+
+Root cause of the R113 bug seen 2026-09-19: main.cpp kept TWO copies of the
+resource list — one loaded directly from data/resources.txt for menu
+display, and the manager's copy — and loadData() flipped the manager's
+Resource::available_ to false for ANY resource that appeared in
+reservations.txt, regardless of date. So R113 (two seed reservations, both
+on dates OTHER than today) showed "Available" in the menu yet
+createReservation rejected it. Display and logic disagreed by construction.
+
+Fix (matching D12's "availability checking traverses the active list"):
+
+- One source of truth: the menu reads resources from the manager only
+  (manager.displayResources()), not a second file load in main.cpp.
+- No flag flipping in loadData: loading a reservation does NOT set the
+  resource's availability bool. That flag now means only what the file says
+  (display metadata), and nothing in the code flips it at runtime.
+- The gate is LinkedList::hasConflict(resourceId, date, start, end):
+  createReservation accepts iff no ACTIVE reservation conflicts on
+  resource + date + time. Otherwise the request goes on the waiting list.
+- Manager rewire (was OPEN 2026-09-19): active_ is now a LinkedList and
+  history_ is a CancellationHistory stack — the graded structures are the
+  real storage, not a vector. createReservation gained date, startTime,
+  endTime params; menu prompts for them ("0" = no constraint).
+
+Consequences to remember:
+- The 6 resources marked "Unavailable" in data/resources.txt (R103 R106
+  R109 R112 R115 R118) are unavailable because the FILE says so. Everything
+  else is available for any date/time with no conflicting reservation.
+- processWaitingList still hands out reservations with empty times
+  ("" = no time constraint) until the waiting list gains a date field — see
+  WaitingList TODO. Open thread, not blocking M1.
+
 ## Still to decide (open)
 
 - Roster + lane ownership. (Status 2026-09-19: all lanes LANDED and merged —
@@ -156,16 +189,11 @@ in the code, see open threads below.
   `LinkedList::hasConflict(resourceId, date, startTime, endTime)` — O(n) walk,
   same resource+date overlap check, skips when any time is empty. Landed in
   PR #6. WAITING ON: manager actually calling it (see next item).
-- OPEN (2026-09-19, spec conformance, TEAM DECISION before M1 submission):
-  ReservationManager stores active reservations in `vector<ReservationData>`
-  and cancellation history in a `vector` used as a stack — it does NOT
-  exercise the graded LinkedList or CancellationHistory classes (they compile
-  but nothing calls them). M1 rubric requires "a linked list must be used to
-  store active reservations" and "a stack must be used for cancellation
-  tracking." Options: (a) OJ re-wires the manager to hold active reservations
-  in LinkedList and history in CancellationHistory, or (b) the team documents
-  the deviation. Decide before the 9/20 zip.
-- OPEN (2026-09-19): type mismatch on the way in — Hoang's loadReservations
-  returns `vector<Reservation>`; OJ's loadData assigns into
-  `vector<ReservationData>`. OJ's fix (instructed): drop ReservationData,
-  store `vector<Reservation>`, use the getters. Needs his commit + verify.
+- RESOLVED (2026-09-19, spec conformance): ReservationManager now stores
+  active reservations in a LinkedList and cancellation history in a
+  CancellationHistory stack — the graded classes are wired in (D13).
+  M1 rubric items "linked list stores active reservations" and "stack for
+  cancellation tracking" are satisfied.
+- RESOLVED (2026-09-19): the ReservationData/vector mismatch is gone with the
+  D13 rewire — active_ is a LinkedList of Reservation, loadData inserts each
+  loaded Reservation.

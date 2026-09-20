@@ -6,11 +6,20 @@
 #include <map>
 #include "Resource.h"
 #include "Reservation.h"
+#include "LinkedList.h"
+#include "CancellationHistory.h"
 #include "WaitingList.h"
 
 // The "hub" of the app. Owns the resource inventory, active reservations,
 // the per-resource waiting queues, and the cancellation stack. Exposes the
 // menu operations the main() loop calls.
+//
+// D12 (2026-09-19): active reservations live in a LinkedList (graded
+// structure, O(n) traversal via hasConflict for the conflict gate) and
+// cancellations live in a CancellationHistory stack (graded structure).
+// Availability is NOT a flag the manager flips — it is derived from
+// LinkedList::hasConflict(resourceId, date, start, end) against active_.
+// The Resource "Available"/"Unavailable" text is display metadata only.
 class ReservationManager {
 public:
   ReservationManager();                 // empty system, nothing loaded
@@ -21,7 +30,6 @@ public:
   );                                     // file loading + initial reservations
 
   std::vector<Resource> getResources() const;
-  std::vector<Reservation> getActiveReservations() const;
 
   void displayResources() const;        // "View Resources"
   void displayActiveReservations() const;
@@ -29,13 +37,16 @@ public:
   bool createReservation(
       const std::string &studentId,
       const std::string &studentName,
-      const std::string &resourceId
-  );                                     // if busy -> enqueue on waiting list
+      const std::string &resourceId,
+      const std::string &date,
+      const std::string &startTime,
+      const std::string &endTime
+  );                                     // if conflict -> enqueue on waiting list
   // ^ D12 (2026-09-16, professor clarification): "available" is NOT just the
-  //   resource's Available flag — the system must traverse the active list and
-  //   check for resource + date + time conflicts (LinkedList::hasConflict).
-  //   Call BEFORE accepting. '' = "no time constraint". Full D12 notes in
-  //   DECISIONS.md; the time fields land on Reservation (Hoang's class).
+  //   resource's Available flag — traverse the active list and check for
+  //   resource + date + time conflicts (LinkedList::hasConflict). Call
+  //   BEFORE accepting. "" = "no time constraint". Full D12 notes in
+  //   DECISIONS.md.
 
   bool cancelReservation(const std::string &reservationId); // push onto history
   bool undoCancellation();               // pop history, restore reservation
@@ -60,8 +71,8 @@ public:
 
 private:
   std::vector<Resource> resources_;      // inventory (vector: fast traversal)
-  std::vector<Reservation> active_;  // active reservations
-  std::vector<Reservation> history_; // LIFO undo stack (pop from back)
+  LinkedList active_;                    // active reservations (graded LL)
+  CancellationHistory history_;          // LIFO undo stack (graded stack)
   std::map<std::string, WaitingList> waitingQueues_; // one queue per resource
 };
 
