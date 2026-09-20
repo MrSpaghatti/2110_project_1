@@ -22,6 +22,10 @@ public:
     //print all reservations in order
     void display() const;
 
+    // count how many active reservations reference this resource (D14:
+    // lets menu 1 show a live count per resource). O(n) walk.
+    int countFor(const std::string& resourceId) const;
+
     // O(1) — maintained counter (DECIDED: count_ member, see below).
     // insert() ++, remove() --, ctor = 0. Keep it in sync in BOTH places.
     int size() const;

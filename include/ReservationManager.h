@@ -71,6 +71,9 @@ public:
 
 private:
   std::vector<Resource> resources_;      // inventory (vector: fast traversal)
+  int nextReservationId_;                // D14: seeds are numeric (301..320);
+                                         // new ids continue (321, 322, ...). Never
+                                         // reuse a cancelled id. Set in loadData.
   LinkedList active_;                    // active reservations (graded LL)
   CancellationHistory history_;          // LIFO undo stack (graded stack)
   std::map<std::string, WaitingList> waitingQueues_; // one queue per resource

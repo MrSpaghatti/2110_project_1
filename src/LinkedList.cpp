@@ -90,6 +90,16 @@ void LinkedList::display() const{
     return;
 }
 
+int LinkedList::countFor(const string& resourceId) const {
+    int n = 0;
+    ReservationNode* current = head_;
+    while (current != nullptr) {
+        if (current->data.getResourceId() == resourceId) n++;
+        current = current->next;
+    }
+    return n;
+}
+
 // 7. size() O(1)
 int LinkedList::size() const{
     return count_;
