@@ -12,7 +12,7 @@ A menu-based CLI app that allows students to reserve campus resources, i.e. stud
 ----------------------------------------------------------------
 - Logan Conrad
 - [NAME 2]
-- [NAME 3]
+- HOANG TRUNG LE
 
 3. FEATURES (Milestone 1)
 ----------------------------------------------------------------
@@ -110,6 +110,33 @@ format: date | member | work done | verified by
 2026-09-08 | [logan] | src/main.cpp: full menu loop (display all resources, standby stubs for 2-6, quit; cin.clear/ignore guards bad input like letters) | make, "./reservation_system"
 2026-09-15 | [logan] | LinkedList: full implementation (ctor/dtor/insert/find/remove/display/size) with tail_ for O(1) append; O(1) count_ counter; remove() fixes tail_ on last-node match | make check, /tmp runtime harness (insert A,B,C, remove mid+tail, insert after tail, empty guards)
 
+
+2026-09-16 | [Hoang Trung Le] | Reservation.h and src/Reservation.cpp:
+implemented Reservation class with constructors, getter functions,
+and print functionality; stores reservation ID, student ID,
+student name, resource ID, and reservation date
+| g++ -Wall, full project build
+
+2026-09-16| [Hoang Trung Le] | Student.h and src/Student.cpp:
+implemented Student class with constructors, getter functions,
+and print functionality
+| g++ -Wall, full project build
+
+2026-09-17| [Hoang Trung Le] | CancellationHistory.h and
+src/CancellationHistory.cpp: implemented cancellation history
+functionality using a stack
+| g++ -Wall, full project build
+
+2026-09-18 | [Hoang Trung Le] | src/main.cpp: integrated reservation
+loading and connected ReservationManager functionality to the menu
+for creating, cancelling, searching, displaying, and undoing
+reservations
+| full project build and runtime testing
+
+2026-09-18 | [Hoang Trung Le] | Added additional comments to Reservation,
+Student, and CancellationHistory files to improve readability and
+make the code easier to understand
+| full project build
 11. GITHUB REPOSITORY
 ----------------------------------------------------------------
     https://github.com/MrSpaghatti/2110_project_1
