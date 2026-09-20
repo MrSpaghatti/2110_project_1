@@ -27,9 +27,6 @@ bool ReservationManager::loadData(
   }
   return true;
 }
-  // then parse reservations.txt into active_ and mark matched resources
-  // unavailable. Return false on a failed load.
-
 
 vector<Resource> ReservationManager::getResources() const {
   return resources_;
