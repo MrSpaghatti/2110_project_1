@@ -34,9 +34,7 @@ Operation: `LinkedList::insert()` — src/LinkedList.cpp, line 22.
 
 Operation: `LinkedList::remove()` — src/LinkedList.cpp, line 52.
 
-[Your answer: Big-O + why. Two phases: finding the node, then the
-pointer surgery. Which phase dominates? Note the special case when the
-removed node is the tail — the loop has to find the new last node.]
+- remove() has a complexity of O(n) because if the node it's looking for is at the end of the list, it will have to traverse the entire list of nodes to find the correct one to remove.
 
 ## 3. Waiting-list processing — Matthew (OJ)
 
@@ -64,6 +62,4 @@ change the cost?]
 Operation: menu option 1 display path — `ReservationManager::displayResources()`,
 which calls `LinkedList::hasConflict()` (O(n) walk) once per resource row.
 
-[Your answer: worst case here is O(m * n) — m resources, each row pays an
-O(n) hasConflict walk to compute its live status word. Optional but shows
-you understand the D13/D14 change: availability is derived, not stored.]
+- hasConflict() has a complexity of O(m x n) because for every m resources, n steps are performed to check if it conflicts with any other reservations.
