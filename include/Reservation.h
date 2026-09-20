@@ -27,16 +27,6 @@ public:
                 const std::string &startTime,
                 const std::string &endTime);
 
-    // TODO (2026-09-16, professor clarification D12): the full constructor
-    // will gain TWO more parameters before the closing paren:
-    //     const std::string &startTime,
-    //     const std::string &endTime
-    // Type them into BOTH the declaration here and the definition in
-    // Reservation.cpp, in the SAME ORDER. The seed file
-    // data/reservations.txt currently has only 5 fields (no times), so the
-    // loader may pass "" for times on file rows — that's fine, an empty
-    // string just means "no time constraint" for that reservation.
-
     // Get reservation information
     std::string getReservationId() const;
     std::string getStudentId() const;
@@ -45,16 +35,6 @@ public:
     std::string getDate() const;
     std::string getStartTime() const;
     std::string getEndTime() const;
-
-    // TODO (2026-09-16, professor clarification D12): add two getters here,
-    // typed exactly like the ones above:
-    //     std::string getStartTime() const;   // returns startTime_
-    //     std::string getEndTime() const;     // returns endTime_
-    // The professor's M1 announcement says every node in the active-reservation
-    // list contains a Start time AND an End time, and that availability checks
-    // compare "resource, date, and time." We need these to make the conflict
-    // check (LinkedList::hasConflict) work. Until you type them, hasConflict
-    // can only compare date — so this is the field that unlocks the real rule.
 
     // Display reservation information
     void print() const;
@@ -65,16 +45,10 @@ private:
     std::string studentName_;
     std::string resourceId_;
     std::string date_;
+    // "HH:MM" style, e.g. "09:00"; empty string = no time constraint
+    // (seed file rows have no times, loader passes "")
     std::string startTime_;
     std::string endTime_;
-
-    // TODO (2026-09-16, professor clarification D12): add the two time fields
-    // below date_, same type as the others (std::string):
-    //     std::string startTime_;   // "HH:MM" style, e.g. "09:00"
-    //     std::string endTime_;     // "HH:MM" style, e.g. "10:30"
-    // Store them in the SAME text format everywhere so string comparison in
-    // hasConflict() is consistent. No special time type — the seed file and
-    // the CELL toolchain stay simple (C++11 std::string is fine).
 };
 
 #endif

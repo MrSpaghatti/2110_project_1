@@ -139,33 +139,33 @@ in the code, see open threads below.
 
 ## Still to decide (open)
 
-- Confirm the team roster + which member takes which functional area. (Status
-  2026-09-15: lanes CLAIMED on Discord, work NOT done yet —
-    Hoang: Student.cpp, CancellationHistory.h/.cpp
-    OJ:    ReservationManager.h/.cpp
-    Logan: LinkedList (DONE, committed) + ReportGenerator + main)
-- Documentation pass DEFERRED (2026-09-15): comment hygiene flagged by Copilot
-  review — stale "struct goes here" line in LinkedList.h, detached tail-rules
-  fragment in LinkedList.cpp. Known, acknowledged, will fix in a later pass;
-  not blocking the LinkedList commit (code verified correct under ASan).
-- OPEN (2026-09-16, from D12): the professor's node list includes Start time
-  and End time, but `Reservation` (5 fields) and `data/reservations.txt` (5
-  pipe-separated fields) have NO time fields — and the original specs never
-  mention times. Decide: extend `Reservation` with `startTime_`/`endTime_`
-  (interactive createReservation would prompt for them; loader stays
-  tolerant), or confirm with the professor that M1 data stays date-only.
-- OPEN (2026-09-16, from D12): availability conflicts must be found by
-  traversing the linked list, but nodes are private to LinkedList (D8) — the
-  manager cannot walk it directly. Contract: LinkedList needs a query method
-  like `hasConflict(resourceId, date, startTime, endTime)` (O(n) walk) that
-  ReservationManager calls. Logan owns this addition; OJ depends on it.
+- Roster + lane ownership. (Status 2026-09-19: all lanes LANDED and merged —
+    Hoang: Student.cpp, CancellationHistory.h/.cpp, FileLoader::loadReservations (PR #12)
+    OJ:    ReservationManager.h/.cpp (in flight: loadData + type change on feature/load-data)
+    Logan: LinkedList + hasConflict + Reservation time fields (PR #6) + ReportGenerator + main
+  README team list still has placeholder name for OJ — fill before submission.)
+- Documentation pass (was DEFERRED 2026-09-15): comment hygiene flagged by Copilot
+  review. DONE 2026-09-19: stale "struct goes here" line fixed in LinkedList.h
+  (ASan commit), D12 TODO scaffolds removed from Reservation.h, WIP comment
+  removed from FileLoader.h, loadReservations doc comment added. Residual:
+  WaitingList.h "add a date field" TODO is a real open question, kept in code.
+- RESOLVED (2026-09-19, from D12): `Reservation` extended with
+  `startTime_`/`endTime_` ("HH:MM" strings, "" = no constraint). Loader passes
+  "" for file rows — seed data stays date-only. Landed in PR #6.
+- RESOLVED (2026-09-19, from D12): conflict rule lives in
+  `LinkedList::hasConflict(resourceId, date, startTime, endTime)` — O(n) walk,
+  same resource+date overlap check, skips when any time is empty. Landed in
+  PR #6. WAITING ON: manager actually calling it (see next item).
 - OPEN (2026-09-19, spec conformance, TEAM DECISION before M1 submission):
-  the merged ReservationManager stores active reservations in
-  `vector<ReservationData>` and cancellation history in a `vector` used as a
-  stack — it does NOT exercise the graded LinkedList or CancellationHistory
-  classes (they compile but nothing calls them). M1 rubric requires "a
-  linked list must be used to store active reservations" and "a stack must
-  be used for cancellation tracking." Options: (a) OJ re-wires the manager
-  to hold active reservations in LinkedList and history in
-  CancellationHistory, or (b) the team documents the deviation. Decide
-  before the 9/20 zip.
+  ReservationManager stores active reservations in `vector<ReservationData>`
+  and cancellation history in a `vector` used as a stack — it does NOT
+  exercise the graded LinkedList or CancellationHistory classes (they compile
+  but nothing calls them). M1 rubric requires "a linked list must be used to
+  store active reservations" and "a stack must be used for cancellation
+  tracking." Options: (a) OJ re-wires the manager to hold active reservations
+  in LinkedList and history in CancellationHistory, or (b) the team documents
+  the deviation. Decide before the 9/20 zip.
+- OPEN (2026-09-19): type mismatch on the way in — Hoang's loadReservations
+  returns `vector<Reservation>`; OJ's loadData assigns into
+  `vector<ReservationData>`. OJ's fix (instructed): drop ReservationData,
+  store `vector<Reservation>`, use the getters. Needs his commit + verify.
