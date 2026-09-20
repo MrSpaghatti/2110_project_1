@@ -92,13 +92,14 @@ true, anything else -> false.
 - Seed data (data/reservations.txt) is date-only; reservations loaded from
   file carry empty start/end times. Empty times mean "no time constraint":
   LinkedList::hasConflict skips the overlap check when any time is empty.
-- ReservationManager stores active reservations in std::vector<Reservation>
-  and cancellation history in a vector stack. The LinkedList and
-  CancellationHistory classes are implemented and compile, but are not yet
-  exercised by the manager's runtime flow (open team decision, see
-  DECISIONS.md).
-- The create-reservation menu path collects student/name/resource; full
-  date + time capture at creation is not yet wired (see DECISIONS.md).
+- ReservationManager stores active reservations in a LinkedList and
+  cancellation history in a CancellationHistory stack (D13, 2026-09-19);
+  both graded structures are exercised by the runtime flow.
+- The create-reservation menu path collects student/name/resource plus
+  date/start/end (type 0 for "no constraint"); availability is derived from
+  LinkedList::hasConflict against the active list, and menu 1 reflects it
+  ("Unavailable (in use right now)" when a reservation covers the current
+  date/time).
 - FileLoader prints an error and returns an empty list if the data file
   cannot be opened or every line fails validation.
 
@@ -132,6 +133,11 @@ format: date | member | work done | verified by
 2026-09-17 | [matthew] | ReservationManager: redesigned without LinkedList/Reservation deps; stores ReservationData struct in vectors (active_/history_) + map<resourceId, WaitingList>; implemented create/cancel/undo/processWaitingList/find/search/sort w/ merge conflict resolution | g++ -Wall, full project syntax check
 2026-09-17 | [matthew] | Set up local MinGW (g++ 16.1.0) toolchain on Windows; project compiles and links locally; pushed commits to origin/main after rebasing onto teammate work | build + run, git push
 2026-09-19 | [matthew] | ReservationManager refactor: rebased feature/load-data onto main; deleted ReservationData struct, active_/history_ are now std::vector<Reservation>; loadData and menu ops updated to Reservation getters (getReservationId, getStudentId, getStudentName, getResourceId, getDate); isAvailable() marking kept | make check, full build + smoke test
+2026-09-19 | [logan] | D13 root-cause + rewire (PR #16): diagnosed R113 bug (menu showed Available but createReservation rejected) as TWO copies of the resource list in main + loadData flag-flipping every reserved resource regardless of date. Rewired ReservationManager: active_ = LinkedList (graded structure), history_ = CancellationHistory stack (graded structure); createReservation now takes date/startTime/endTime and gates on LinkedList::hasConflict(resourceId, date, start, end) before accepting — loadData no longer flips Resource availability flags, availability is derived from the active list | make check, E2E smoke (R113 bookable 09/19, rejected 09/21 conflict, cancel/undo OK)
+2026-09-19 | [logan] | DECISIONS.md: recorded D13 (availability derived, not a flag), resolved the spec-conformance thread (graded LinkedList/stack now exercised) and the ReservationData/vector type-mismatch thread | git log, doc review
+2026-09-19 | [logan] | src/main.cpp: added menu option 7 "Display active reservations" (manager.displayActiveReservations) so reservation IDs are visible before cancelling; Quit moved to 8 (PR #17) | make check, E2E (create -> view -> cancel by shown ID)
+2026-09-19 | [logan] | D14 live display, part 1 (PR #18): LinkedList::countFor() + Resource::print(activeCount) — menu 1 now shows "(N active reservations)" per resource, updating on book/cancel. Reservation IDs are now numeric and continue the seed sequence (321, 322, ...) via nextReservationId_ instead of "RES"+size, which reused IDs after a cancellation shrank the list | make check, E2E (R113 count 2->3 on book, cancel by 321)
+2026-09-19 | [logan] | D14 live display, part 2 (PR #19): menu 1 status word is live — displayResources computes hasConflict(resourceId, today, now, now) each refresh, so a resource with a reservation covering the current time shows "Unavailable (in use right now)". File "Unavailable" (equipment out of service) still wins; date-gated so other-day seeds don't false-positive | make check, E2E (R113 12:00-24:00 today -> in-use now)
 11. GITHUB REPOSITORY
 ----------------------------------------------------------------
     https://github.com/MrSpaghatti/2110_project_1
