@@ -76,7 +76,7 @@ vector<Reservation> FileLoader::loadReservations(const string &path) {
         }
 
         // Pass all 5 string fields to the Reservation constructor
-        reservations.push_back(Reservation(fields[0], fields[1], fields[2], fields[3], fields[4]));
+        reservations.push_back(Reservation(fields[0], fields[1], fields[2], fields[3], fields[4]), "", "");
     }
     return reservations;
 }
