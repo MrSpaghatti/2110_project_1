@@ -13,7 +13,6 @@ A menu-based CLI app that allows students to reserve campus resources, i.e. stud
 - Logan Conrad
 - Matthew Ojeh Jr.
 - HOANG TRUNG LE
-- [NAME 3]
 
 3. FEATURES (Milestone 1)
 ----------------------------------------------------------------
