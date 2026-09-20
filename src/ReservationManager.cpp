@@ -1,44 +1,180 @@
 #include "ReservationManager.h"
-// src/ReservationManager.cpp — implement THE BRAIN here.
-//
-// This is the biggest file in the project, but it's mostly GLUE: it calls
-// methods on the four structures you and your teammates already wrote. If
-// you find yourself writing a loop over linked-list nodes here, stop —
-// that logic belongs in LinkedList. The manager delegates.
-//
-// Suggested order:
-//
-// 1. Constructor: load data/resources.txt and data/reservations.txt into
-//    the member structures. FileLoader::loadResources() already exists
-//    (returns vector<Resource>). You'll write the reservations load (or
-//    add a loadReservations() to FileLoader — your call, keep it consistent).
-//    Stub the four members to empty first; get it COMPILING before you wire
-//    file loading.
-//
-// 2. indexOfResource(id): walk resources_, return index or -1. This one
-//    helper makes create/cancel/display clean everywhere.
-//
-// 3. displayAllResources(): just iterate resources_ and call print(). This
-//    is what menu option 1 currently does inline in main.cpp — move it here.
-//
-// 4. createReservation(...): the availability check from the header design.
-//    Print a clear message for both outcomes (created / queued-waiting).
-//
-// 5. cancelReservation(id): find + remove + push + flip availability.
-//    Handle "not found" with a message instead of crashing.
-//
-// 6. undoLastCancellation(): pop + re-insert + flip back. Empty stack ->
-//    "Nothing to undo."
-//
-// 7. displayWaitingLists() / displayCancellationHistory(): call the
-//    .display() methods you wrote. If a queue is empty, WaitingList::display
-//    already prints "The waiting list is empty." — good enough.
-//
-// 8. Reservations-by-student: walk the active list, print matches. This is
-//    the traversal from the spec ("Finding reservations associated with a
-//    specific student").
-//
-// Compile after every step: `make check` (syntax) then `make` (link). The
-// linker is your friend here — an undefined reference tells you exactly which
-// method the manager calls that doesn't exist yet. Write them in that order,
-// and you'll never see a wall of errors at once.
+#include "FileLoader.h"
+#include <algorithm>
+#include <iostream>
+using namespace std;
+// implementation of the ReservationManager class declared in ReservationManager.h
+
+ReservationManager::ReservationManager() {
+  // Empty body
+}
+
+bool ReservationManager::loadData(
+    const string &resourcesPath,
+    const string &reservationsPath
+) {
+  resources_ = FileLoader::loadResources(resourcesPath);
+  vector<Reservation> loaded = FileLoader::loadReservations(reservationsPath);
+  for (const auto& res : loaded) {
+    active_.insert(res);
+  }
+  // D12 (2026-09-19): do NOT flip Resource availability flags here. A
+  // resource is "available" for a given date/time iff no ACTIVE reservation
+  // conflicts with it — checked at createReservation time via
+  // LinkedList::hasConflict. The file's "Unavailable" text is display
+  // metadata only.
+  if (resources_.empty()) {
+      return false;
+  }
+  return true;
+}
+
+vector<Resource> ReservationManager::getResources() const {
+  return resources_;
+}
+
+void ReservationManager::displayResources() const {
+  cout << "===== Resources =====" << endl;
+  for (const auto& r : resources_) {
+    r.print();
+  }
+}
+
+void ReservationManager::displayActiveReservations() const {
+  active_.display();
+}
+
+bool ReservationManager::createReservation(
+    const string &studentId,
+    const string &studentName,
+    const string &resourceId,
+    const string &date,
+    const string &startTime,
+    const string &endTime
+) {
+    // 1. Resource must exist.
+    bool found = false;
+    for (const auto& r : resources_) {
+        if (r.getId() == resourceId) {
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        return false;
+    }
+
+    // 2. D12 gate: accept only when no ACTIVE reservation conflicts on
+    //    resource + date + time. Availability is derived, not a flag.
+    if (active_.hasConflict(resourceId, date, startTime, endTime)) {
+        // resource is busy for that slot — add to waiting list
+        addToWaitingList(studentId, studentName, resourceId);
+        return false;
+    }
+
+    // 3. Free slot: create a new reservation and append to the LinkedList.
+    string resId = "RES" + to_string(active_.size() + 1);
+    active_.insert(Reservation(resId, studentId, studentName,
+                               resourceId, date, startTime, endTime));
+    return true;
+}
+
+bool ReservationManager::cancelReservation(const string &reservationId) {
+  Reservation* match = active_.find(reservationId);
+  if (match == nullptr) {
+      return false;
+  }
+  string resourceId = match->getResourceId();
+  history_.push(*match);          // remember for undo (graded stack)
+  active_.remove(reservationId);  // take it out of the active list
+
+  if (waitingQueues_[resourceId].isEmpty()) {
+      // nobody waiting — slot simply opens up (availability is derived
+      // from active_ now, so there is no flag to flip)
+  } else {
+      processWaitingList(resourceId);
+  }
+  return true;
+}
+
+
+bool ReservationManager::undoCancellation() {
+  if (history_.isEmpty()) {
+    cout << "No cancellations to undo." << endl;
+    return false;
+  }
+  Reservation* last = history_.top();
+  Reservation lastCopy = *last;
+  history_.pop();
+  if (!waitingQueues_[lastCopy.getResourceId()].isEmpty()) {
+    processWaitingList(lastCopy.getResourceId());
+  } else {
+    active_.insert(lastCopy);
+  }
+  return true;
+}
+
+void ReservationManager::addToWaitingList(
+    const string &studentId,
+    const string &studentName,
+    const string &resourceId) {
+    WaitingEntry entry{studentId, studentName, resourceId};
+    waitingQueues_[resourceId].enqueue(entry);
+    }
+
+void ReservationManager::processWaitingList(const string &resourceId) {
+  WaitingList &q = waitingQueues_[resourceId];
+  if (q.isEmpty()) return;
+  WaitingEntry e = q.dequeue();
+  string resId = "RES" + to_string(active_.size() + 1);
+  active_.insert(Reservation(resId, e.studentId, e.studentName,
+                             resourceId, "", "", ""));
+}
+
+void ReservationManager::displayWaitingLists() const {
+  for (const auto& pair : waitingQueues_) {
+     if (!pair.second.isEmpty()) {
+          cout << "Resource ID: " << pair.first << endl;
+          pair.second.display();
+     }
+  }
+}
+
+void ReservationManager::displayCancellationHistory() const {
+  history_.display();
+}
+
+bool ReservationManager::findReservation(const string &id) const {
+  Reservation* r = const_cast<LinkedList&>(active_).find(id);
+  return r != nullptr;
+}
+
+bool ReservationManager::findResource(const string &id) const {
+  for (const auto& r : resources_) {
+    if (r.getId() == id) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void ReservationManager::sortResources(const string &criteria) {
+  if (criteria == "name") {
+    sort(resources_.begin(), resources_.end(),
+          [](const Resource &a, const Resource &b) {
+            return a.getName() < b.getName();
+          });
+  } else if (criteria == "type") {
+    sort(resources_.begin(), resources_.end(),
+          [](const Resource &a, const Resource &b) {
+            return a.getType() < b.getType();
+          });
+  } else if (criteria == "availability") {
+    sort(resources_.begin(), resources_.end(),
+          [](const Resource &a, const Resource &b) {
+            return a.isAvailable() && !b.isAvailable();
+          });
+  } else {
+    cout << "Invalid sorting criteria: " << criteria << endl;
+  }
+}

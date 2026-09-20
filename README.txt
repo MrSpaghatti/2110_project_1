@@ -11,7 +11,7 @@ A menu-based CLI app that allows students to reserve campus resources, i.e. stud
 2. TEAM MEMBERS
 ----------------------------------------------------------------
 - Logan Conrad
-- [NAME 2]
+- Matthew Ojeh Jr.
 - HOANG TRUNG LE
 
 3. FEATURES (Milestone 1)
@@ -89,16 +89,24 @@ true, anything else -> false.
 
 9. KNOWN LIMITATIONS / ASSUMPTIONS
 ----------------------------------------------------------------
-- Only resource data loading is implemented so far; reservations loading is
-  WIP (FileLoader::loadReservations), and the menu/linked-list/queue/stack
-  features are not built yet (see DEVELOPMENT LOG).
+- Seed data (data/reservations.txt) is date-only; reservations loaded from
+  file carry empty start/end times. Empty times mean "no time constraint":
+  LinkedList::hasConflict skips the overlap check when any time is empty.
+- ReservationManager stores active reservations in std::vector<Reservation>
+  and cancellation history in a vector stack. The LinkedList and
+  CancellationHistory classes are implemented and compile, but are not yet
+  exercised by the manager's runtime flow (open team decision, see
+  DECISIONS.md).
+- The create-reservation menu path collects student/name/resource; full
+  date + time capture at creation is not yet wired (see DECISIONS.md).
 - FileLoader prints an error and returns an empty list if the data file
   cannot be opened or every line fails validation.
 
 10. DEVELOPMENT LOG
 ----------------------------------------------------------------
-Per grading_note.md, individual contribution is graded separately; log work
-here as it is completed so each member can accurately report their part.
+Individual contribution is graded separately per the professor's grading
+note; log work here as it is completed so each member can accurately
+report their part.
 
 format: date | member | work done | verified by
 
@@ -115,6 +123,15 @@ format: date | member | work done | verified by
 2026-09-18 | [Hoang Trung Le] | src/main.cpp: integrated reservation loading with ReservationManager and connected menu options for creating, cancelling, displaying active reservations, searching by reservation ID, and undoing cancellations | full project build, loaded 20 reservations, runtime menu testing
 2026-09-18 | [Hoang Trung Le] | include/Reservation.h, include/Student.h, include/CancellationHistory.h, src/Reservation.cpp, src/Student.cpp, src/CancellationHistory.cpp: added explanatory comments to class declarations and member functions to improve code readability | full project build
 2026-09-19 | [Hoang Trung Le] | include/FileLoader.h + src/FileLoader.cpp: added loadReservations() to parse reservations.txt using pipe-separated fields and create Reservation objects from ReservationID, StudentID, StudentName, ResourceID, and Date | g++ -Wall, full project build, loaded 20 reservations
+2026-09-19 | [logan] | LinkedList::hasConflict(resourceId, date, startTime, endTime): O(n) walk, same resource+date test, time-overlap check, skips check when any time is empty ("" = no constraint) | make check, /tmp hasconflict harness (overlap -> TRUE, diff date -> FALSE)
+2026-09-19 | [logan] | Reservation: added D12 time fields startTime_/endTime_ ("HH:MM" style, "" = no constraint), 7-param full ctor, getStartTime()/getEndTime() | make check
+2026-09-19 | [logan] | src/main.cpp: wired menu cases 2-6 to ReservationManager (create/cancel/undo/search/display) | make check, full build
+2026-09-19 | [logan] | FileLoader.h renamed loadReservations doc comment + dropped WIP marker; DECISIONS.md consolidated (resolved D12 threads, roster status); README roster completed | make check
+2026-09-19 | [logan] | Merge-chain coordination: test-merged teammate branches before merging (PRs #6/#12/#13/#14 all green), drafted the ReservationData->vector<Reservation> refactor brief for OJ, cleaned stray roster line on feature/load-data | test merges + make check
+2026-09-17 | [matthew] | WaitingList: full FIFO queue implementation (ctor/dtor/enqueue/dequeue/front/display/isEmpty/size) with front_/back_ pointers; handles empty enqueue (sets both ends) and last-item dequeue (clears back_) | g++ -Wall, runtime harness (enqueue A,B,C, dequeue order, empty guards)
+2026-09-17 | [matthew] | ReservationManager: redesigned without LinkedList/Reservation deps; stores ReservationData struct in vectors (active_/history_) + map<resourceId, WaitingList>; implemented create/cancel/undo/processWaitingList/find/search/sort w/ merge conflict resolution | g++ -Wall, full project syntax check
+2026-09-17 | [matthew] | Set up local MinGW (g++ 16.1.0) toolchain on Windows; project compiles and links locally; pushed commits to origin/main after rebasing onto teammate work | build + run, git push
+2026-09-19 | [matthew] | ReservationManager refactor: rebased feature/load-data onto main; deleted ReservationData struct, active_/history_ are now std::vector<Reservation>; loadData and menu ops updated to Reservation getters (getReservationId, getStudentId, getStudentName, getResourceId, getDate); isAvailable() marking kept | make check, full build + smoke test
 11. GITHUB REPOSITORY
 ----------------------------------------------------------------
     https://github.com/MrSpaghatti/2110_project_1

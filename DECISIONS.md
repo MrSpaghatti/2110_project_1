@@ -117,8 +117,83 @@ the same commit.
   O(n) walk. Cost: insert() increments, remove() decrements — keep both in
   sync; a drift here silently corrupts every size-based report.
 
+## D12 — Milestone 1 data-structure clarification from professor (2026-09-16)
+
+Professor clarified the required M1 structures in a class announcement:
+
+- **ONE linked list** stores ALL active reservations across the whole system —
+  NOT one list per resource. The same resource can appear in many nodes
+  (different dates/times). List ops required: insert, remove, traverse,
+  display.
+- **A FIFO queue** manages the waiting list for a resource. Students wait for
+  a specific resource; the one who has waited longest is processed first.
+  The waiting list is separate from the active-reservation list.
+- **A LIFO stack** tracks cancelled reservations. Undo/restore pops the MOST
+  RECENT cancellation first. Also separate from the list and the queues.
+- **Availability checking** traverses the single active-reservation list and
+  compares resource + date + time for conflicts.
+
+This matches the design already in place (D6, D11, and the WaitingList /
+CancellationHistory contracts). Two points from the announcement are NOT yet
+in the code, see open threads below.
+
+## D13 — Availability is derived, not a flag (2026-09-19)
+
+Root cause of the R113 bug seen 2026-09-19: main.cpp kept TWO copies of the
+resource list — one loaded directly from data/resources.txt for menu
+display, and the manager's copy — and loadData() flipped the manager's
+Resource::available_ to false for ANY resource that appeared in
+reservations.txt, regardless of date. So R113 (two seed reservations, both
+on dates OTHER than today) showed "Available" in the menu yet
+createReservation rejected it. Display and logic disagreed by construction.
+
+Fix (matching D12's "availability checking traverses the active list"):
+
+- One source of truth: the menu reads resources from the manager only
+  (manager.displayResources()), not a second file load in main.cpp.
+- No flag flipping in loadData: loading a reservation does NOT set the
+  resource's availability bool. That flag now means only what the file says
+  (display metadata), and nothing in the code flips it at runtime.
+- The gate is LinkedList::hasConflict(resourceId, date, start, end):
+  createReservation accepts iff no ACTIVE reservation conflicts on
+  resource + date + time. Otherwise the request goes on the waiting list.
+- Manager rewire (was OPEN 2026-09-19): active_ is now a LinkedList and
+  history_ is a CancellationHistory stack — the graded structures are the
+  real storage, not a vector. createReservation gained date, startTime,
+  endTime params; menu prompts for them ("0" = no constraint).
+
+Consequences to remember:
+- The 6 resources marked "Unavailable" in data/resources.txt (R103 R106
+  R109 R112 R115 R118) are unavailable because the FILE says so. Everything
+  else is available for any date/time with no conflicting reservation.
+- processWaitingList still hands out reservations with empty times
+  ("" = no time constraint) until the waiting list gains a date field — see
+  WaitingList TODO. Open thread, not blocking M1.
+
 ## Still to decide (open)
 
-- Confirm the team roster + which member takes which functional area. (Status
-  2026-09-15: Hoang = Reservation/Student, Matthew = WaitingList, Logan =
-  LinkedList/CancellationHistory/ReservationManager/ReportGenerator + main.)
+- Roster + lane ownership. (Status 2026-09-19: all lanes LANDED and merged —
+    Hoang: Student.cpp, CancellationHistory.h/.cpp, FileLoader::loadReservations (PR #12)
+    OJ:    ReservationManager.h/.cpp (in flight: loadData + type change on feature/load-data)
+    Logan: LinkedList + hasConflict + Reservation time fields (PR #6) + ReportGenerator + main
+  README team list still has placeholder name for OJ — fill before submission.)
+- Documentation pass (was DEFERRED 2026-09-15): comment hygiene flagged by Copilot
+  review. DONE 2026-09-19: stale "struct goes here" line fixed in LinkedList.h
+  (ASan commit), D12 TODO scaffolds removed from Reservation.h, WIP comment
+  removed from FileLoader.h, loadReservations doc comment added. Residual:
+  WaitingList.h "add a date field" TODO is a real open question, kept in code.
+- RESOLVED (2026-09-19, from D12): `Reservation` extended with
+  `startTime_`/`endTime_` ("HH:MM" strings, "" = no constraint). Loader passes
+  "" for file rows — seed data stays date-only. Landed in PR #6.
+- RESOLVED (2026-09-19, from D12): conflict rule lives in
+  `LinkedList::hasConflict(resourceId, date, startTime, endTime)` — O(n) walk,
+  same resource+date overlap check, skips when any time is empty. Landed in
+  PR #6. WAITING ON: manager actually calling it (see next item).
+- RESOLVED (2026-09-19, spec conformance): ReservationManager now stores
+  active reservations in a LinkedList and cancellation history in a
+  CancellationHistory stack — the graded classes are wired in (D13).
+  M1 rubric items "linked list stores active reservations" and "stack for
+  cancellation tracking" are satisfied.
+- RESOLVED (2026-09-19): the ReservationData/vector mismatch is gone with the
+  D13 rewire — active_ is a LinkedList of Reservation, loadData inserts each
+  loaded Reservation.
