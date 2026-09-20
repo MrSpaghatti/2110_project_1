@@ -1,6 +1,7 @@
 #include "ReservationManager.h"
 #include "FileLoader.h"
 #include <algorithm>
+#include <ctime>
 #include <iostream>
 using namespace std;
 // implementation of the ReservationManager class declared in ReservationManager.h
@@ -41,9 +42,18 @@ vector<Resource> ReservationManager::getResources() const {
 
 void ReservationManager::displayResources() const {
   cout << "===== Resources =====" << endl;
-  for (const auto& r : resources_) {
-    // live active-reservation count so menu 1 updates when you book/cancel
-    r.print(active_.countFor(r.getId()));
+  // "right now" once, so every row answers the same question
+  time_t t = time(nullptr);
+  struct tm tmv;
+  localtime_r(&t, &tmv);
+  char dateBuf[16], timeBuf[8];
+  strftime(dateBuf, sizeof(dateBuf), "%m/%d/%Y", &tmv); // "09/19/2026"
+  strftime(timeBuf, sizeof(timeBuf), "%H:%M", &tmv);    // "23:48"
+  string today(dateBuf), now(timeBuf);
+
+  for (const auto& res : resources_) {
+    bool busyNow = active_.hasConflict(res.getId(), today, now, now);
+    res.print(active_.countFor(res.getId()), busyNow);
   }
 }
 
