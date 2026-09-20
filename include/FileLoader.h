@@ -2,6 +2,10 @@
 #define FILELOADER_H
 
 #include "Resource.h"
+#include "Reservation.h"
+
+
+
 #include <string>
 #include <vector>
 
@@ -16,6 +20,10 @@ public:
     // and returns them as Resource objects. expects 4
     // fields that have been separated by pipes (id|name|type|availability)
     static std::vector<Resource> loadResources(const std::string &path);
+
+
+     // Load reservations from reservations.txt
+    static std::vector<Reservation> loadReservations(const std::string &path);
 };
 
 #endif
