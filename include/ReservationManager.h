@@ -5,17 +5,8 @@
 #include <vector>
 #include <map>
 #include "Resource.h"
+#include "Reservation.h"
 #include "WaitingList.h"
-
-// A reservation stored directly inside the manager (no separate
-// Reservation class, no LinkedList). One per row in reservations.txt.
-struct ReservationData {
-  std::string reservationId;
-  std::string studentId;
-  std::string studentName;
-  std::string resourceId;
-  std::string date;
-};
 
 // The "hub" of the app. Owns the resource inventory, active reservations,
 // the per-resource waiting queues, and the cancellation stack. Exposes the
@@ -30,7 +21,7 @@ public:
   );                                     // file loading + initial reservations
 
   std::vector<Resource> getResources() const;
-  std::vector<ReservationData> getActiveReservations() const;
+  std::vector<Reservation> getActiveReservations() const;
 
   void displayResources() const;        // "View Resources"
   void displayActiveReservations() const;
@@ -69,8 +60,8 @@ public:
 
 private:
   std::vector<Resource> resources_;      // inventory (vector: fast traversal)
-  std::vector<ReservationData> active_;  // active reservations
-  std::vector<ReservationData> history_; // LIFO undo stack (pop from back)
+  std::vector<Reservation> active_;  // active reservations
+  std::vector<Reservation> history_; // LIFO undo stack (pop from back)
   std::map<std::string, WaitingList> waitingQueues_; // one queue per resource
 };
 

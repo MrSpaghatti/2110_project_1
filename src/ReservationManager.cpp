@@ -17,7 +17,7 @@ bool ReservationManager::loadData(
   active_ = FileLoader::loadReservations(reservationsPath);
   for ( const auto& res : active_) {
     for (auto &resource : resources_) {
-      if (resource.getId() == res.resourceId) {
+      if (resource.getId() == res.getResourceId()) {
         resource.setAvailable(false);
       }
     }
@@ -32,7 +32,7 @@ vector<Resource> ReservationManager::getResources() const {
   return resources_;
 }
 
-vector<ReservationData> ReservationManager::getActiveReservations() const {
+vector<Reservation> ReservationManager::getActiveReservations() const {
   return active_;
 }
 
@@ -45,7 +45,7 @@ void ReservationManager::displayResources() const {
 
 void ReservationManager::displayActiveReservations() const {
   for (const auto& res : active_){
-      cout << res.reservationId << " | " << res.studentId << " | " << res.studentName << " | " << res.resourceId << endl;
+      cout << res.getReservationId() << " | " << res.getStudentId() << " | " << res.getStudentName() << " | " << res.getResourceId() << endl;
     
   }
 }
@@ -60,7 +60,7 @@ bool ReservationManager::createReservation(
             if (r.isAvailable()) {
                 // create a new reservation and add to active_
                 string resId = "RES" + to_string(active_.size() + 1);
-                active_.push_back({resId, studentId, studentName, resourceId});
+                active_.push_back(Reservation(resId, studentId, studentName, resourceId, "", "", ""));
                 r.setAvailable(false);
                 return true;
             } else {
@@ -76,7 +76,7 @@ bool ReservationManager::createReservation(
 bool ReservationManager::cancelReservation(const string &reservationId) {
   auto it = active_.end();
   for (auto i = active_.begin(); i != active_.end(); ++i) {
-    if (i->reservationId == reservationId) {
+    if (i->getReservationId() == reservationId) {
       it = i;
       break;
     }
@@ -84,7 +84,7 @@ bool ReservationManager::cancelReservation(const string &reservationId) {
   if (it == active_.end()) {
       return false;
   }
-  string resourceId = it->resourceId;
+  string resourceId = it->getResourceId();
   history_.push_back(*it);
   active_.erase(it);
 
@@ -108,14 +108,14 @@ bool ReservationManager::undoCancellation() {
     cout << "No cancellations to undo." << endl;
     return false;
   }
-  ReservationData last = history_.back();
+  Reservation last = history_.back();
   history_.pop_back();
-  if (!waitingQueues_[last.resourceId].isEmpty()) {
-    processWaitingList(last.resourceId);
+  if (!waitingQueues_[last.getResourceId()].isEmpty()) {
+    processWaitingList(last.getResourceId());
   } else {
     active_.push_back(last);
     for (auto& r : resources_) {
-      if (r.getId() == last.resourceId) {
+      if (r.getId() == last.getResourceId()) {
           r.setAvailable(false);
           break;
       }
@@ -137,7 +137,7 @@ void ReservationManager::processWaitingList(const string &resourceId) {
   if (q.isEmpty()) return;
   WaitingEntry e = q.dequeue();
   string resId = "RES" + to_string(active_.size() + 1);
-  active_.push_back({resId, e.studentId, e.studentName, resourceId});
+  active_.push_back(Reservation(resId, e.studentId, e.studentName, resourceId, "", "", ""));
   for (auto& r : resources_) {
       if ( r.getId() == resourceId) {
             r.setAvailable(false);
@@ -157,13 +157,13 @@ void ReservationManager::displayWaitingLists() const {
 
 void ReservationManager::displayCancellationHistory() const {
   for (const auto& res : history_) {
-    cout << res.reservationId << " | " << res.studentId << " | " << res.studentName << " | " << res.resourceId << endl;
+    cout << res.getReservationId() << " | " << res.getStudentId() << " | " << res.getStudentName() << " | " << res.getResourceId() << endl;
   }
 }
 
 bool ReservationManager::findReservation(const string &id) const {
   for (const auto& res : active_) {
-    if (res.reservationId == id) {
+    if (res.getReservationId() == id) {
       return true;
     }
   }
