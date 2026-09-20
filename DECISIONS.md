@@ -117,6 +117,26 @@ the same commit.
   O(n) walk. Cost: insert() increments, remove() decrements — keep both in
   sync; a drift here silently corrupts every size-based report.
 
+## D12 — Milestone 1 data-structure clarification from professor (2026-09-16)
+
+Professor clarified the required M1 structures in a class announcement:
+
+- **ONE linked list** stores ALL active reservations across the whole system —
+  NOT one list per resource. The same resource can appear in many nodes
+  (different dates/times). List ops required: insert, remove, traverse,
+  display.
+- **A FIFO queue** manages the waiting list for a resource. Students wait for
+  a specific resource; the one who has waited longest is processed first.
+  The waiting list is separate from the active-reservation list.
+- **A LIFO stack** tracks cancelled reservations. Undo/restore pops the MOST
+  RECENT cancellation first. Also separate from the list and the queues.
+- **Availability checking** traverses the single active-reservation list and
+  compares resource + date + time for conflicts.
+
+This matches the design already in place (D6, D11, and the WaitingList /
+CancellationHistory contracts). Two points from the announcement are NOT yet
+in the code, see open threads below.
+
 ## Still to decide (open)
 
 - Confirm the team roster + which member takes which functional area. (Status
@@ -128,3 +148,24 @@ the same commit.
   review — stale "struct goes here" line in LinkedList.h, detached tail-rules
   fragment in LinkedList.cpp. Known, acknowledged, will fix in a later pass;
   not blocking the LinkedList commit (code verified correct under ASan).
+- OPEN (2026-09-16, from D12): the professor's node list includes Start time
+  and End time, but `Reservation` (5 fields) and `data/reservations.txt` (5
+  pipe-separated fields) have NO time fields — and the original specs never
+  mention times. Decide: extend `Reservation` with `startTime_`/`endTime_`
+  (interactive createReservation would prompt for them; loader stays
+  tolerant), or confirm with the professor that M1 data stays date-only.
+- OPEN (2026-09-16, from D12): availability conflicts must be found by
+  traversing the linked list, but nodes are private to LinkedList (D8) — the
+  manager cannot walk it directly. Contract: LinkedList needs a query method
+  like `hasConflict(resourceId, date, startTime, endTime)` (O(n) walk) that
+  ReservationManager calls. Logan owns this addition; OJ depends on it.
+- OPEN (2026-09-19, spec conformance, TEAM DECISION before M1 submission):
+  the merged ReservationManager stores active reservations in
+  `vector<ReservationData>` and cancellation history in a `vector` used as a
+  stack — it does NOT exercise the graded LinkedList or CancellationHistory
+  classes (they compile but nothing calls them). M1 rubric requires "a
+  linked list must be used to store active reservations" and "a stack must
+  be used for cancellation tracking." Options: (a) OJ re-wires the manager
+  to hold active reservations in LinkedList and history in
+  CancellationHistory, or (b) the team documents the deviation. Decide
+  before the 9/20 zip.

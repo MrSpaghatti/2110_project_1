@@ -26,6 +26,13 @@ public:
     // insert() ++, remove() --, ctor = 0. Keep it in sync in BOTH places.
     int size() const;
 
+    // OJ's ReservationManager calls this in createReservation; do not rename
+    // it once it's in (log in DECISIONS.md, not just chat, if it changes).
+    bool hasConflict(   const std::string& resourceId,
+                        const std::string& date,
+                        const std::string& startTime,
+                        const std::string& endTime) const;
+
 private:
     struct ReservationNode { Reservation data; ReservationNode* next = nullptr; };
 

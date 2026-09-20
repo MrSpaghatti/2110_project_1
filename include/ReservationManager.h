@@ -40,6 +40,11 @@ public:
       const std::string &studentName,
       const std::string &resourceId
   );                                     // if busy -> enqueue on waiting list
+  // ^ D12 (2026-09-16, professor clarification): "available" is NOT just the
+  //   resource's Available flag — the system must traverse the active list and
+  //   check for resource + date + time conflicts (LinkedList::hasConflict).
+  //   Call BEFORE accepting. '' = "no time constraint". Full D12 notes in
+  //   DECISIONS.md; the time fields land on Reservation (Hoang's class).
 
   bool cancelReservation(const std::string &reservationId); // push onto history
   bool undoCancellation();               // pop history, restore reservation
