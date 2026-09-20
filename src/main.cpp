@@ -23,7 +23,8 @@ int main() {
         cout << "4. Undo last cancellation" << endl;
         cout << "5. Display waiting lists" << endl;
         cout << "6. Display cancellation history" << endl;
-        cout << "7. Quit" << endl;
+        cout << "7. Display active reservations" << endl;
+        cout << "8. Quit" << endl;
         cout << "Choice: ";
         cin >> choice;
 
@@ -99,6 +100,10 @@ int main() {
             }
 
             case 7:
+                manager.displayActiveReservations();
+                break;
+
+            case 8:
                 cout << "Goodbye." << endl;
                 break;
 
@@ -109,12 +114,12 @@ int main() {
                 // failure flag, ignore() drains up to 10000 chars or the
                 // newline, whichever comes first, so the next read starts
                 // fresh. (Verified 2026-09-08: exit 0 on letter input.)
-                cout << "Invalid choice. Pick 1-7.\n";
+                cout << "Invalid choice. Pick 1-8.\n";
                 cin.clear();
                 cin.ignore(10000, '\n');
                 break;
         }
-    } while (choice != 7);
+    } while (choice != 8);
 
     return 0;
 }
