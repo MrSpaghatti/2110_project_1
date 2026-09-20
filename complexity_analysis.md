@@ -62,4 +62,4 @@ change the cost?]
 Operation: menu option 1 display path — `ReservationManager::displayResources()`,
 which calls `LinkedList::hasConflict()` (O(n) walk) once per resource row.
 
-- hasConflict() has a complexity of O(m x n) because for every m resources, n steps are performed to check if it conflicts with any other reservations.
+- displayResources() has a complexity of O(m x n) because it calls hasConflict(), and for every m resources, n steps are performed to check if it conflicts with any other reservations.
