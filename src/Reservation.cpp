@@ -2,9 +2,9 @@
  * Program Name: Reservation.cpp
  * Assigned Member: Hoang Trung Le
  * Student Id: 11949817
- * Description: Implements the member functions for the Reservation class. It sets up 
- *              both constructors to initialize member variables, provides getter methods 
- *              so other parts of the program can access private reservation data, and 
+ * Description: Implements the member functions for the Reservation class. It sets up
+ *              both constructors to initialize member variables, provides getter methods
+ *              so other parts of the program can access private reservation data, and
  *              includes a print function to output formatted details to the console.
  */
 
@@ -21,7 +21,9 @@ Reservation::Reservation()
       studentId_(""),
       studentName_(""),
       resourceId_(""),
-      date_("")
+      date_(""),
+      startTime_(""),
+      endTime_("")
 {
 }
 
@@ -33,12 +35,16 @@ Reservation::Reservation(const string &reservationId,
                          const string &studentId,
                          const string &studentName,
                          const string &resourceId,
-                         const string &date)
+                         const string &date,
+                         const string &startTime,
+                         const string &endTime)
     : reservationId_(reservationId),
       studentId_(studentId),
       studentName_(studentName),
       resourceId_(resourceId),
-      date_(date)
+      date_(date),
+      startTime_(startTime),
+      endTime_(endTime)
 {
 }
 
@@ -80,16 +86,27 @@ string Reservation::getDate() const
     return date_;
 }
 
+
+string Reservation::getStartTime() const {
+    return startTime_;
+}
+
+string Reservation::getEndTime() const {
+    return endTime_;
+}
+
 // Display method:
 // Prints all reservation fields in a readable format. The order matches the
 // fields used in reservations.txt so that the reservation information is easy
 // to verify when testing the program.
 void Reservation::print() const
 {
-    cout << "Reservation ID : " << reservationId_ << "\n"
-         << "Student ID     : " << studentId_ << "\n"
-         << "Student Name   : " << studentName_ << "\n"
-         << "Resource ID    : " << resourceId_ << "\n"
-         << "Date           : " << date_ << "\n"
+    cout << "Reservation ID : " << reservationId_ << endl
+         << "Student ID     : " << studentId_ << endl
+         << "Student Name   : " << studentName_ << endl
+         << "Resource ID    : " << resourceId_ << endl
+         << "Date           : " << date_ << endl
+         << "Start Time     : " << startTime_ << endl
+         << "End Time       : " << endTime_ << endl
          << "----------------------------------------" << endl;
 }

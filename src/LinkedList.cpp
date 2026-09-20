@@ -94,3 +94,16 @@ void LinkedList::display() const{
 int LinkedList::size() const{
     return count_;
 }
+
+bool LinkedList::hasConflict(const std::string& resourceId,const std::string& date,const std::string& startTime,const std::string& endTime) const {
+    ReservationNode* current = head_;
+    while (current != nullptr){
+        bool sameBooking = (current->data.getResourceId() == resourceId && current->data.getDate() == date);
+        bool timeClash = (startTime == "" || endTime == "" || current->data.getStartTime() == "" || current->data.getEndTime() == "") || (current->data.getStartTime() < endTime && startTime < current->data.getEndTime());
+        if (sameBooking && timeClash){
+            return true;
+        }
+        current = current->next;
+    }
+    return false;
+}

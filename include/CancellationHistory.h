@@ -2,11 +2,11 @@
  * Program name: CancellationHistory.h
  * Assigned Member: Hoang Trung Le
  * Id: 11949817
- * Description: Header file for the CancellationHistory class. I built this using a custom 
- *              linked-list stack (LIFO) so we can track cancelled reservations as they happen. 
- *              It lets us push new cancellations onto the top, pop or view the latest one, 
+ * Description: Header file for the CancellationHistory class. I built this using a custom
+ *              linked-list stack (LIFO) so we can track cancelled reservations as they happen.
+ *              It lets us push new cancellations onto the top, pop or view the latest one,
  *              and print out the full history from most recent to oldest.
- /**********************************************************************************************
+ **********************************************************************************************
 */
 #ifndef CANCELLATIONHISTORY_H
 #define CANCELLATIONHISTORY_H

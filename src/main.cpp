@@ -1,18 +1,6 @@
 #include <iostream>
 #include "FileLoader.h"
-// NEXT STEPS (see the comment skeletons in include/ and src/):
-//   1. Implement LinkedList, CancellationHistory, then ReservationManager.
-//   2. Create ONE ReservationManager here (after the resource load) and
-//      replace every `case N:` body below with a manager method call:
-//         case 1: manager.displayAllResources();      break;
-//         case 2: manager.createReservation(...);     break;   // ask for id/name/resource/date
-//         case 3: manager.cancelReservation(id);      break;
-//         case 4: manager.undoLastCancellation();     break;
-//         case 5: manager.displayWaitingLists();      break;
-//         case 6: manager.displayCancellationHistory(); break;
-//   3. Delete the menu labels "(waiting on teammate's PR)" — they are now
-//      stale: the WaitingList/Reservation PRs merged.
-//   Keep main.cpp THIN: prompts + reads + manager calls. No business logic.
+#include "ReservationManager.h"
 using namespace std;
 
 int main() {
@@ -21,19 +9,22 @@ int main() {
     // inside each option.
     vector<Resource> resources = FileLoader::loadResources("data/resources.txt");
 
+    ReservationManager manager;
+    manager.loadData("data/resources.txt", "data/reservations.txt");
+
     // The menu loop: show options, read a choice, do something, repeat,
     // until the user picks quit. do/while so the menu always shows at
     // least once.
     int choice = 0;
     do {
-        cout << "\n===== Campus Resource Reservation System =====\n";
-        cout << "1. Display all resources\n";
-        cout << "2. Create a reservation     (waiting on teammate's PR)\n";
-        cout << "3. Cancel a reservation     (waiting on teammate's PR)\n";
-        cout << "4. Undo last cancellation   (waiting on teammate's PR)\n";
-        cout << "5. Display waiting lists    (waiting on teammate's PR)\n";
-        cout << "6. Display cancellation history (waiting on teammate's PR)\n";
-        cout << "7. Quit\n";
+        cout << endl << "===== Campus Resource Reservation System =====" << endl;
+        cout << "1. Display all resources" << endl;
+        cout << "2. Create a reservation" << endl;
+        cout << "3. Cancel a reservation" << endl;
+        cout << "4. Undo last cancellation" << endl;
+        cout << "5. Display waiting lists" << endl;
+        cout << "6. Display cancellation history" << endl;
+        cout << "7. Quit" << endl;
         cout << "Choice: ";
         cin >> choice;
 
@@ -44,19 +35,60 @@ int main() {
                 }
                 break;
 
-            case 2:
-            case 3:
-            case 4:
-            case 5:
-            case 6:
-                // Teammate's lane. Keep the app compiling even before
-                // their PR merges: print a standby message and go back
-                // to the menu instead of breaking the build.
-                cout << "Reservations features: waiting on teammate's PR.\n";
+            case 2: {
+                string studentId;
+                string studentName;
+                string resourceId;
+
+                cout << "Enter student ID: ";
+                cin >> studentId;
+                cout << "Enter student name: ";
+                cin >> studentName;
+                cout << "Enter resource ID: ";
+                cin >> resourceId;
+
+                if (manager.createReservation(studentId, studentName, resourceId)){
+                    cout << "Reservation created." << endl;
+                } else {
+                    cout << "Unavailable - added to waiting list." << endl;
+                }
                 break;
+            }
+
+            case 3: {
+                string reservationId;
+                cout << "Enter reservation ID: ";
+                cin >> reservationId;
+
+                if (manager.cancelReservation(reservationId)){
+                    cout << "Reservation cancelled." << endl;
+                } else {
+                    cout << "Reservation not found." << endl;
+                }
+                break;
+            }
+
+            case 4: {
+                if (manager.undoCancellation()){
+                    cout << "Most recent cancellation undone." << endl;
+                } else {
+                    cout << "Nothing to undo." << endl;
+                }
+                break;
+            }
+
+            case 5: {
+                manager.displayWaitingLists();
+                break;
+            }
+
+            case 6: {
+                manager.displayCancellationHistory();
+                break;
+            }
 
             case 7:
-                cout << "Goodbye.\n";
+                cout << "Goodbye." << endl;
                 break;
 
             default:
