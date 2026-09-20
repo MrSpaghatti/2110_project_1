@@ -39,6 +39,10 @@ void Resource::setAvailable(bool available){
 }
 
 // menu must read like input file, cant just print 1/0
-void Resource::print() const {
-    cout << id_ << " - " << name_ << " - " << type_ << " - " << (available_ ? "Available" : "Unavailable") << endl;
+void Resource::print(int activeCount) const {
+    cout << id_ << " - " << name_ << " - " << type_ << " - " << (available_ ? "Available" : "Unavailable");
+    if (activeCount > 0) {
+        cout << " (" << activeCount << " active reservation" << (activeCount == 1 ? "" : "s") << ")";
+    }
+    cout << endl;
 }

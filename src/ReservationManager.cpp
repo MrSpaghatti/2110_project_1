@@ -5,7 +5,7 @@
 using namespace std;
 // implementation of the ReservationManager class declared in ReservationManager.h
 
-ReservationManager::ReservationManager() {
+ReservationManager::ReservationManager() : nextReservationId_(0) {
   // Empty body
 }
 
@@ -17,7 +17,13 @@ bool ReservationManager::loadData(
   vector<Reservation> loaded = FileLoader::loadReservations(reservationsPath);
   for (const auto& res : loaded) {
     active_.insert(res);
+    // D14: seed ids are numeric (301, 302, ...) — remember the max so new
+    // ids continue the sequence (321, ...) instead of "RES" + size (which
+    // collides/reuses after a cancellation shrinks the list).
+    try { nextReservationId_ = max(nextReservationId_, stoi(res.getReservationId())); }
+    catch (...) { /* non-numeric seed id: ignore */ }
   }
+  nextReservationId_++;  // next id = one past the max we just saw
   // D12 (2026-09-19): do NOT flip Resource availability flags here. A
   // resource is "available" for a given date/time iff no ACTIVE reservation
   // conflicts with it — checked at createReservation time via
@@ -36,7 +42,8 @@ vector<Resource> ReservationManager::getResources() const {
 void ReservationManager::displayResources() const {
   cout << "===== Resources =====" << endl;
   for (const auto& r : resources_) {
-    r.print();
+    // live active-reservation count so menu 1 updates when you book/cancel
+    r.print(active_.countFor(r.getId()));
   }
 }
 
@@ -73,7 +80,7 @@ bool ReservationManager::createReservation(
     }
 
     // 3. Free slot: create a new reservation and append to the LinkedList.
-    string resId = "RES" + to_string(active_.size() + 1);
+    string resId = to_string(nextReservationId_++);
     active_.insert(Reservation(resId, studentId, studentName,
                                resourceId, date, startTime, endTime));
     return true;
@@ -126,7 +133,7 @@ void ReservationManager::processWaitingList(const string &resourceId) {
   WaitingList &q = waitingQueues_[resourceId];
   if (q.isEmpty()) return;
   WaitingEntry e = q.dequeue();
-  string resId = "RES" + to_string(active_.size() + 1);
+  string resId = to_string(nextReservationId_++);
   active_.insert(Reservation(resId, e.studentId, e.studentName,
                              resourceId, "", "", ""));
 }
