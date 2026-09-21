@@ -39,6 +39,20 @@ void Resource::setAvailable(bool available){
 }
 
 // menu must read like input file, cant just print 1/0
-void Resource::print() const {
-    cout << id_ << " - " << name_ << " - " << type_ << " - " << (available_ ? "Available" : "Unavailable") << endl;
+void Resource::print(int activeCount, bool busyNow) const {
+    // D14: the word is live. File "Unavailable" wins (equipment out of
+    // service); otherwise the resource is "Unavailable (in use now)" when a
+    // reservation conflicts with the current date/time, else "Available".
+    cout << id_ << " - " << name_ << " - " << type_ << " - ";
+    if (!available_) {
+        cout << "Unavailable";
+    } else if (busyNow) {
+        cout << "Unavailable (in use right now)";
+    } else {
+        cout << "Available";
+    }
+    if (activeCount > 0) {
+        cout << " (" << activeCount << " active reservation" << (activeCount == 1 ? "" : "s") << ")";
+    }
+    cout << endl;
 }

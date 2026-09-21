@@ -87,6 +87,8 @@ string Reservation::getDate() const
 }
 
 
+// "HH:MM" or "" = no time constraint (D12). Seed rows have no times,
+// so the loader passes "" and the conflict check skips the time tier.
 string Reservation::getStartTime() const {
     return startTime_;
 }

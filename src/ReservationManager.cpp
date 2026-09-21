@@ -1,11 +1,12 @@
 #include "ReservationManager.h"
 #include "FileLoader.h"
 #include <algorithm>
+#include <ctime>
 #include <iostream>
 using namespace std;
 // implementation of the ReservationManager class declared in ReservationManager.h
 
-ReservationManager::ReservationManager() {
+ReservationManager::ReservationManager() : nextReservationId_(0) {
   // Empty body
 }
 
@@ -17,7 +18,13 @@ bool ReservationManager::loadData(
   vector<Reservation> loaded = FileLoader::loadReservations(reservationsPath);
   for (const auto& res : loaded) {
     active_.insert(res);
+    // D14: seed ids are numeric (301, 302, ...) — remember the max so new
+    // ids continue the sequence (321, ...) instead of "RES" + size (which
+    // collides/reuses after a cancellation shrinks the list).
+    try { nextReservationId_ = max(nextReservationId_, stoi(res.getReservationId())); }
+    catch (...) { /* non-numeric seed id: ignore */ }
   }
+  nextReservationId_++;  // next id = one past the max we just saw
   // D12 (2026-09-19): do NOT flip Resource availability flags here. A
   // resource is "available" for a given date/time iff no ACTIVE reservation
   // conflicts with it — checked at createReservation time via
@@ -35,8 +42,18 @@ vector<Resource> ReservationManager::getResources() const {
 
 void ReservationManager::displayResources() const {
   cout << "===== Resources =====" << endl;
-  for (const auto& r : resources_) {
-    r.print();
+  // "right now" once, so every row answers the same question
+  time_t t = time(nullptr);
+  struct tm tmv;
+  localtime_r(&t, &tmv);
+  char dateBuf[16], timeBuf[8];
+  strftime(dateBuf, sizeof(dateBuf), "%m/%d/%Y", &tmv); // "09/19/2026"
+  strftime(timeBuf, sizeof(timeBuf), "%H:%M", &tmv);    // "23:48"
+  string today(dateBuf), now(timeBuf);
+
+  for (const auto& res : resources_) {
+    bool busyNow = active_.hasConflict(res.getId(), today, now, now);
+    res.print(active_.countFor(res.getId()), busyNow);
   }
 }
 
@@ -73,7 +90,7 @@ bool ReservationManager::createReservation(
     }
 
     // 3. Free slot: create a new reservation and append to the LinkedList.
-    string resId = "RES" + to_string(active_.size() + 1);
+    string resId = to_string(nextReservationId_++);
     active_.insert(Reservation(resId, studentId, studentName,
                                resourceId, date, startTime, endTime));
     return true;
@@ -88,9 +105,9 @@ bool ReservationManager::cancelReservation(const string &reservationId) {
   history_.push(*match);          // remember for undo (graded stack)
   active_.remove(reservationId);  // take it out of the active list
 
+  // nobody waiting -> the slot just opens (availability derives from
+  // active_, no flag to flip); someone waiting -> promote them now.
   if (waitingQueues_[resourceId].isEmpty()) {
-      // nobody waiting — slot simply opens up (availability is derived
-      // from active_ now, so there is no flag to flip)
   } else {
       processWaitingList(resourceId);
   }
@@ -98,6 +115,8 @@ bool ReservationManager::cancelReservation(const string &reservationId) {
 }
 
 
+// LIFO restore: newest cancel first. If a student is already waiting on
+// that resource, the slot goes to them instead of back to the original.
 bool ReservationManager::undoCancellation() {
   if (history_.isEmpty()) {
     cout << "No cancellations to undo." << endl;
@@ -114,6 +133,8 @@ bool ReservationManager::undoCancellation() {
   return true;
 }
 
+// operator[] creates the queue on first use, then enqueue appends to the
+// back so the longest-waiting student is served first.
 void ReservationManager::addToWaitingList(
     const string &studentId,
     const string &studentName,
@@ -122,11 +143,13 @@ void ReservationManager::addToWaitingList(
     waitingQueues_[resourceId].enqueue(entry);
     }
 
+// promote the longest-waiting student; the slot stays booked, so the
+// resource itself never flips back to "available" here.
 void ReservationManager::processWaitingList(const string &resourceId) {
   WaitingList &q = waitingQueues_[resourceId];
   if (q.isEmpty()) return;
   WaitingEntry e = q.dequeue();
-  string resId = "RES" + to_string(active_.size() + 1);
+  string resId = to_string(nextReservationId_++);
   active_.insert(Reservation(resId, e.studentId, e.studentName,
                              resourceId, "", "", ""));
 }
