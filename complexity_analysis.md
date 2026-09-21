@@ -28,7 +28,7 @@ Definitions used:
 
 Operation: `LinkedList::insert()` — src/LinkedList.cpp, line 22.
 
-- insert() has a complexity of O(1) because the tail_ pointer is cached and new nodes simply are appended after said tail node. So there is no need to traverse the entire list to find the end.
+- insert() has a complexity of O(1) because the tail\_ pointer is cached and new nodes simply are appended after said tail node. So there is no need to traverse the entire list to find the end.
 
 ## 2. Reservation removal — Logan
 
@@ -43,19 +43,20 @@ src/WaitingList.cpp, lines 26 and 41, and
 `ReservationManager::processWaitingList()` — src/ReservationManager.cpp,
 line 142.
 
-[Your answer: Big-O for (a) one enqueue, (b) one dequeue, (c) one full
-processWaitingList cycle. Note the queue is FIFO with front_/back_
-pointers — does it ever scan the whole list?]
+- enqueue() has a complexity of O(1) because the back\_ pointer is cached, so a new waiting-list entry can be added directly to the end without traversing the list.
 
-## 4. Undo cancellation — Hoang
+- dequeue() has a complexity of O(1) because the front\_ pointer points directly to the first entry, so removing it does not require scanning the list.
+
+- processWaitingList() has a complexity of O(w) because it may process each entry in the waiting list once. It uses dequeue() for each entry, which is O(1), so the total cost is proportional to the number of waiting-list entries.
+
+## 4. Undo cancellation — Hoang Trung Le
 
 Operation: `ReservationManager::undoCancellation()` —
 src/ReservationManager.cpp, line 118.
 
-[Your answer: Big-O + why. history_ is your CancellationHistory stack
-(push/pop) — does popping the last entry scan anything? Undo also calls
-processWaitingList() when a waiting student is promoted — does that
-change the cost?]
+- undoCancellation() has a complexity of O(1) when undoing a cancellation because history\_ is a stack, so the most recent cancellation can be removed directly using pop() without scanning the stack.
+
+- If undoing the cancellation promotes a student from the waiting list, processWaitingList() may also be called. Since processing can examine up to w waiting-list entries, the worst-case complexity is O(w).
 
 ## 5. Bonus — live availability display (extra depth) — Logan
 
