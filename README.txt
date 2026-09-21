@@ -35,8 +35,7 @@ Project1/
 |   |-- LinkedList.h
 |   |-- WaitingList.h
 |   |-- CancellationHistory.h
-|   |-- ReservationManager.h
-|   `-- ReportGenerator.h
+|   `-- ReservationManager.h
 |-- src/
 |   |-- main.cpp
 |   |-- FileLoader.cpp
@@ -46,8 +45,7 @@ Project1/
 |   |-- LinkedList.cpp
 |   |-- WaitingList.cpp
 |   |-- CancellationHistory.cpp
-|   |-- ReservationManager.cpp
-|   `-- ReportGenerator.cpp
+|   `-- ReservationManager.cpp
 |-- data/
 |   |-- resources.txt
 |   `-- reservations.txt

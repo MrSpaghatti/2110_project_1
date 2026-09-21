@@ -53,7 +53,7 @@ the same commit.
     2. `Reservation`, `Student` (each needs nothing)
     3. `LinkedList`, `WaitingList`, `CancellationHistory` (need Reservation/Student)
     4. `ReservationManager` (needs all of the above)
-    5. `ReportGenerator`, then `main`.
+    5. `main`.
 - After each step we compile. That way, when there's an error, it's almost
   always in the code we just wrote — not something from two files ago.
 - `main` starts as a tiny placeholder (prints the title, returns 0) just to
@@ -70,7 +70,8 @@ the same commit.
 - `CancellationHistory`: a LIFO stack of cancelled reservations for undo.
 - `ReservationManager`: the "brain" that connects everything — the resource
   vector, the reservation list, the waiting list, and the cancellation stack.
-- `ReportGenerator`: produces the reports the assignment asks for.
+  (Reporting + sorting are a Final-submission deliverable due 10/11; the
+  ReportGenerator scaffold was removed 9/20 since M1 doesn't require it.)
 
 ## D7 — Reservations refer to resources by ID string only (2026-09-05)
 
