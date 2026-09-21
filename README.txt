@@ -12,7 +12,7 @@ A menu-based CLI app that allows students to reserve campus resources, i.e. stud
 ----------------------------------------------------------------
 - Logan Conrad
 - Matthew Ojeh Jr.
-- HOANG TRUNG LE
+- Hoang Trung Le
 
 3. FEATURES (Milestone 1)
 ----------------------------------------------------------------
@@ -71,9 +71,11 @@ On the CELL machines:
 
 7. USAGE
 ----------------------------------------------------------------
-Current status (Milestone 1 in progress): app builds and prints the project
-title; the menu is stubbed. Resource loading (src/FileLoader.cpp) is implemented
-but not yet wired into the menu. Data files must sit in data/.
+Current status (Milestone 1 complete): full menu-driven app — load data from
+files, display resources with live availability, create reservations (linked
+list), cancel with undo (stack), per-resource waiting lists (FIFO queue),
+and display active reservations / waiting lists / cancellation history.
+Data files must sit in data/.
 
 8. INPUT FILE FORMATS
 ----------------------------------------------------------------
@@ -138,6 +140,7 @@ format: date | member | work done | verified by
 2026-09-19 | [logan] | src/main.cpp: added menu option 7 "Display active reservations" (manager.displayActiveReservations) so reservation IDs are visible before cancelling; Quit moved to 8 (PR #17) | make check, E2E (create -> view -> cancel by shown ID)
 2026-09-19 | [logan] | D14 live display, part 1 (PR #18): LinkedList::countFor() + Resource::print(activeCount) — menu 1 now shows "(N active reservations)" per resource, updating on book/cancel. Reservation IDs are now numeric and continue the seed sequence (321, 322, ...) via nextReservationId_ instead of "RES"+size, which reused IDs after a cancellation shrank the list | make check, E2E (R113 count 2->3 on book, cancel by 321)
 2026-09-19 | [logan] | D14 live display, part 2 (PR #19): menu 1 status word is live — displayResources computes hasConflict(resourceId, today, now, now) each refresh, so a resource with a reservation covering the current time shows "Unavailable (in use right now)". File "Unavailable" (equipment out of service) still wins; date-gated so other-day seeds don't false-positive | make check, E2E (R113 12:00-24:00 today -> in-use now)
+2026-09-20 | [logan] | Availability gate + waiting-list slot (R112 fix): createReservation routes file-marked-Unavailable resources to the waiting list instead of accepting an active booking; WaitingEntry gained date/startTime/endTime so a promoted student keeps their requested slot (processWaitingList no longer books empty times). Completed OJ's complexity_analysis.md §3 + fixed stale "menu stubbed" README claim | make check, 3 smoke runs (R112 queues, R101 conflict queues, cancel 301 promotes with 09/15/2026)
 11. GITHUB REPOSITORY
 ----------------------------------------------------------------
     https://github.com/MrSpaghatti/2110_project_1

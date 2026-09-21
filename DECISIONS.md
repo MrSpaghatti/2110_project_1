@@ -166,9 +166,9 @@ Consequences to remember:
 - The 6 resources marked "Unavailable" in data/resources.txt (R103 R106
   R109 R112 R115 R118) are unavailable because the FILE says so. Everything
   else is available for any date/time with no conflicting reservation.
-- processWaitingList still hands out reservations with empty times
-  ("" = no time constraint) until the waiting list gains a date field — see
-  WaitingList TODO. Open thread, not blocking M1.
+- RESOLVED 2026-09-20: WaitingEntry carries the requested
+  date/startTime/endTime, so processWaitingList books promoted students with
+  their requested slot instead of empty times.
 
 ## Still to decide (open)
 
@@ -176,12 +176,14 @@ Consequences to remember:
     Hoang: Student.cpp, CancellationHistory.h/.cpp, FileLoader::loadReservations (PR #12)
     OJ:    ReservationManager.h/.cpp (in flight: loadData + type change on feature/load-data)
     Logan: LinkedList + hasConflict + Reservation time fields (PR #6) + ReportGenerator + main
-  README team list still has placeholder name for OJ — fill before submission.)
+  README team list: all three names filled (Logan Conrad, Matthew Ojeh Jr.,
+  Hoang Trung Le).)
 - Documentation pass (was DEFERRED 2026-09-15): comment hygiene flagged by Copilot
   review. DONE 2026-09-19: stale "struct goes here" line fixed in LinkedList.h
   (ASan commit), D12 TODO scaffolds removed from Reservation.h, WIP comment
-  removed from FileLoader.h, loadReservations doc comment added. Residual:
-  WaitingList.h "add a date field" TODO is a real open question, kept in code.
+  removed from FileLoader.h, loadReservations doc comment added.
+  RESOLVED 2026-09-20: WaitingList.h "add a date field" TODO closed — the
+  queue now tracks the requested slot (date/startTime/endTime).
 - RESOLVED (2026-09-19, from D12): `Reservation` extended with
   `startTime_`/`endTime_` ("HH:MM" strings, "" = no constraint). Loader passes
   "" for file rows — seed data stays date-only. Landed in PR #6.
