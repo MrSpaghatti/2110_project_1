@@ -44,7 +44,8 @@ int main() {
                 cout << "Enter student ID: ";
                 cin >> studentId;
                 cout << "Enter student name: ";
-                cin >> studentName;
+                cin.ignore();
+                getline(cin, studentName);
                 cout << "Enter resource ID: ";
                 cin >> resourceId;
                 cout << "Enter date (MM/DD/YYYY, 0 for none): ";
@@ -60,8 +61,7 @@ int main() {
                 if (startTime == "0") startTime = "";
                 if (endTime == "0") endTime = "";
 
-                if (manager.createReservation(studentId, studentName, resourceId,
-                                              date, startTime, endTime)){
+                if (manager.createReservation(studentId, studentName, resourceId, date, startTime, endTime)){
                     cout << "Reservation created." << endl;
                 } else {
                     cout << "Unavailable - added to waiting list." << endl;
