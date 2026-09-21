@@ -9,7 +9,11 @@ struct WaitingEntry {
   std::string studentId;
   std::string studentName;
   std::string resourceId;
-  // TODO: add a date field if the queue should also track request time
+  // requested slot, so a promoted student keeps the date/time they asked
+  // for instead of getting an empty one
+  std::string date;
+  std::string startTime;
+  std::string endTime;
 };
 
 // First-In, First-Out queue of waiting requests (one queue per resource).

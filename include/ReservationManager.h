@@ -54,7 +54,10 @@ public:
   void addToWaitingList(
       const std::string &studentId,
       const std::string &studentName,
-      const std::string &resourceId
+      const std::string &resourceId,
+      const std::string &date,
+      const std::string &startTime,
+      const std::string &endTime
   );
   void processWaitingList(const std::string &resourceId);
   // ^ called when a resource frees up: auto-assign the next waiting request

@@ -71,9 +71,11 @@ bool ReservationManager::createReservation(
 ) {
     // 1. Resource must exist.
     bool found = false;
+    bool available = false;
     for (const auto& r : resources_) {
         if (r.getId() == resourceId) {
             found = true;
+            available = r.isAvailable();
             break;
         }
     }
@@ -81,11 +83,16 @@ bool ReservationManager::createReservation(
         return false;
     }
 
+    if (!available) {
+        addToWaitingList(studentId, studentName, resourceId, date, startTime, endTime);
+        return false;
+    }
+
     // 2. D12 gate: accept only when no ACTIVE reservation conflicts on
     //    resource + date + time. Availability is derived, not a flag.
     if (active_.hasConflict(resourceId, date, startTime, endTime)) {
         // resource is busy for that slot — add to waiting list
-        addToWaitingList(studentId, studentName, resourceId);
+        addToWaitingList(studentId, studentName, resourceId, date, startTime, endTime);
         return false;
     }
 
@@ -138,8 +145,11 @@ bool ReservationManager::undoCancellation() {
 void ReservationManager::addToWaitingList(
     const string &studentId,
     const string &studentName,
-    const string &resourceId) {
-    WaitingEntry entry{studentId, studentName, resourceId};
+    const string &resourceId,
+    const string &date,
+    const string &startTime,
+    const string &endTime) {
+    WaitingEntry entry{studentId, studentName, resourceId, date, startTime, endTime};
     waitingQueues_[resourceId].enqueue(entry);
     }
 
@@ -151,7 +161,7 @@ void ReservationManager::processWaitingList(const string &resourceId) {
   WaitingEntry e = q.dequeue();
   string resId = to_string(nextReservationId_++);
   active_.insert(Reservation(resId, e.studentId, e.studentName,
-                             resourceId, "", "", ""));
+                             resourceId, e.date, e.startTime, e.endTime));
 }
 
 void ReservationManager::displayWaitingLists() const {
