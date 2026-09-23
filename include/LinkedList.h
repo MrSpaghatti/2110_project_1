@@ -1,6 +1,8 @@
 #ifndef LINKEDLIST_H
 #define LINKEDLIST_H
 #include "Reservation.h"
+#include <functional>
+#include <vector>
 
 class LinkedList {
 public:
@@ -37,6 +39,18 @@ public:
                         const std::string& startTime,
                         const std::string& endTime) const;
 
+    // quickSort: sort the nodes in place (no new nodes). Takes a
+    // comparator so one sort works for any key - the menu passes a
+    // lambda for date, name, etc. Recursive. Average O(n log n),
+    // worst O(n^2). Pivot on the tail node so sorted input doesn't
+    // hit the worst case.
+    void quickSort(std::function<bool(const Reservation&, const Reservation&)> before);
+
+    // filter: walk the list, return every reservation the predicate
+    // accepts. Used by findReservationsByStudent and the reports.
+    // The list itself is not changed. O(n).
+    std::vector<Reservation> filter(const std::function<bool(const Reservation&)>& keep) const;
+
 private:
     struct ReservationNode { Reservation data; ReservationNode* next = nullptr; };
 
@@ -45,6 +59,13 @@ private:
 
     // counter for O(1) size()
     int count_;
+
+    // partition: relink nodes around the pivot, return the new head.
+    // concatenate: join two sorted chains back together.
+    ReservationNode* partition(ReservationNode* head,
+                               ReservationNode* pivot,
+                               std::function<bool(const Reservation&, const Reservation&)> before);
+    ReservationNode* concatenate(ReservationNode* left, ReservationNode* right);
 };
 
 #endif

@@ -109,6 +109,18 @@ int main() {
                 cout << "Goodbye." << endl;
                 break;
 
+            // Phase 2 menu additions (final submission): search, sort,
+            // reports. Add these and renumber Quit up to 12:
+            //   9.  Search - submenu: by resource ID, reservation ID, or
+            //       student ID (findResource / findReservation /
+            //       findReservationsByStudent)
+            //   10. Sort - submenu: name / type / date. Build the
+            //       comparator lambda, call sortResources(criteria).
+            //   11. Reports - submenu: the four ReportGenerator reports.
+            //       Construct ReportGenerator gen(manager); once, before
+            //       the loop.
+            // Keep the bad-input guard working for the new range.
+
             default:
                 // Bad input guard: a LETTER in the choice box makes
                 // `cin >> choice` fail and leaves garbage in the stream,

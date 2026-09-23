@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <functional>
 #include "Resource.h"
 #include "Reservation.h"
 #include "LinkedList.h"
@@ -69,10 +70,31 @@ public:
   bool findReservation(const std::string &id) const;
   bool findResource(const std::string &id) const;
 
-  // sorting: reorder resources (by name/type/availability) before display
+  // searching by student: linear scan over the active list (the spec's
+  // "find reservations associated with a student" example). Reuse
+  // active_.filter(...) with a studentId predicate instead of writing a
+  // second loop. Returns every match, empty vector if none.
+  std::vector<Reservation> findReservationsByStudent(
+      const std::string &studentId) const;
+
+  // sorting: reorder resources (by name/type) before display. Body uses
+  // the private quickSort below - std::sort is off the table since the
+  // spec makes us implement the sort ourselves (merge or quick). The
+  // criteria string just picks which comparator lambda to pass.
   void sortResources(const std::string &criteria);
 
 private:
+  // quick sort over resources_ (vector). Index-based recursion since
+  // vectors have random access; comparator passed in so one sort covers
+  // name/type. Called from sortResources() with the lambda the
+  // criteria string picked.
+  void quickSort(std::vector<Resource> &v, int lo, int hi,
+                 const std::function<bool(const Resource&, const Resource&)> &before);
+
+  // ReportGenerator reads active_ and waitingQueues_ directly, so it
+  // gets friend access instead of a pile of public getters.
+  friend class ReportGenerator;
+
   std::vector<Resource> resources_;      // inventory (vector: fast traversal)
   int nextReservationId_;                // D14: seeds are numeric (301..320);
                                          // new ids continue (321, 322, ...). Never
