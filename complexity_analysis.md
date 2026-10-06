@@ -1,8 +1,8 @@
 # Complexity Analysis — Campus Resource Reservation System
 
-Milestone 1 | Team: Logan Conrad, Matthew Ojeh Jr., Hoang Trung Le | 2026-09-19
+Milestone 1 + Final | Team: Logan Conrad, Matthew Ojeh Jr., Hoang Trung Le | 2026-09-19
 
-Short report on the operations the M1 rubric asks about. Each answer:
+Short report on the operations the M1 and final rubrics ask about. Each answer:
 Big-O in worst case + 2-3 sentences explaining _why_, citing the code.
 
 Who fills what (each member explains their own code — grader note says
@@ -64,3 +64,25 @@ Operation: menu option 1 display path — `ReservationManager::displayResources(
 which calls `LinkedList::hasConflict()` (O(n) walk, src/LinkedList.cpp, line 107) once per resource row.
 
 - displayResources() has a complexity of O(m x n) because it calls hasConflict(), and for every m resources, n steps are performed to check if it conflicts with any other reservations.
+
+---
+
+## 6. Search by student ID — Logan
+
+Operation: `ReservationManager::findReservationsByStudent()` (src/ReservationManager.cpp, line ~195), which calls `LinkedList::filter()` (src/LinkedList.cpp, line ~120).
+
+- findReservationsByStudent() has a complexity of O(n) because filter() walks the active-reservation list once from head to tail, pushing every reservation whose studentId matches the lambda predicate. The caller then uses the returned vector directly, so no extra pass is added.
+
+## 7. Sorting resources — Logan
+
+Operations: `ReservationManager::sortResources()` (src/ReservationManager.cpp, line ~203) and the private `quickSort()` it calls (line ~225).
+
+- sortResources() picks a comparator lambda for the requested criteria ("name", "type", or "availability") and hands it to quickSort(). No copy is made; quickSort reorders resources_ in place.
+- quickSort() has an average complexity of O(m log m) where m = number of resources: each partition pass is O(m), and the recursion splits the vector roughly in half each time (log m levels). Worst case is O(m^2) on an already-sorted vector because the pivot is always the tail element, so the partition does no real splitting. We accepted this worst case because the resource catalog is small and the code is the hand-written sort the spec requires (instead of std::sort).
+
+## 8. Reports — Logan
+
+Operations: `ReportGenerator::mostRequestedReport()` (src/ReportGenerator.cpp, line 31) and its private pair `quickSort()` (line 69).
+
+- mostRequestedReport() is O(m x n): it loops over m resources and, for each one, calls LinkedList::countFor() which walks all n active reservations. It then sorts the m (resourceId, count) pairs with the same Lomuto quickSort as Section 7 — average O(m log m), worst O(m^2). The other three reports are dominated by this same m x n pattern (utilizationReport) or one O(m) pass (waitingStatsReport, which uses map::find per resource).
+- waitingStatsReport() uses map::find() (O(log r), r = queues in the map) rather than operator[] because operator[] would silently create an empty WaitingList entry for every resource that never had a queued request — growing the map on a read-only report call.

@@ -14,7 +14,7 @@ A menu-based CLI app that allows students to reserve campus resources, i.e. stud
 - Matthew Ojeh Jr.
 - Hoang Trung Le
 
-3. FEATURES (Milestone 1)
+3. FEATURES (Milestone 1 + Final)
 ----------------------------------------------------------------
 - Load resource and reservation data from files
 - Display all resources and their availability
@@ -23,6 +23,12 @@ A menu-based CLI app that allows students to reserve campus resources, i.e. stud
 - Undo the most recent cancellation (stack)
 - Waiting list per resource (FIFO queue)
 - Display waiting lists and cancellation history
+- Search: find a reservation or resource by ID, find all reservations
+  for a student (LinkedList::filter)
+- Sort: reorder resources by name/type/availability with a hand-written
+  quick sort (no std::sort)
+- Reports: active reservations, resource utilization, most-requested
+  resources, waiting-list statistics (ReportGenerator)
 
 4. FILE STRUCTURE
 ----------------------------------------------------------------
@@ -69,10 +75,12 @@ On the CELL machines:
 
 7. USAGE
 ----------------------------------------------------------------
-Current status (Milestone 1 complete): full menu-driven app — load data from
+Current status (Milestone 1 + Final complete): full menu-driven app — load data from
 files, display resources with live availability, create reservations (linked
 list), cancel with undo (stack), per-resource waiting lists (FIFO queue),
-and display active reservations / waiting lists / cancellation history.
+display active reservations / waiting lists / cancellation history, search by
+reservation/resource/student, sort resources with a hand-written quick sort,
+and generate utilization/waiting reports.
 Data files must sit in data/.
 
 8. INPUT FILE FORMATS
@@ -139,6 +147,9 @@ format: date | member | work done | verified by
 2026-09-19 | [logan] | D14 live display, part 1 (PR #18): LinkedList::countFor() + Resource::print(activeCount) — menu 1 now shows "(N active reservations)" per resource, updating on book/cancel. Reservation IDs are now numeric and continue the seed sequence (321, 322, ...) via nextReservationId_ instead of "RES"+size, which reused IDs after a cancellation shrank the list | make check, E2E (R113 count 2->3 on book, cancel by 321)
 2026-09-19 | [logan] | D14 live display, part 2 (PR #19): menu 1 status word is live — displayResources computes hasConflict(resourceId, today, now, now) each refresh, so a resource with a reservation covering the current time shows "Unavailable (in use right now)". File "Unavailable" (equipment out of service) still wins; date-gated so other-day seeds don't false-positive | make check, E2E (R113 12:00-24:00 today -> in-use now)
 2026-09-20 | [logan] | Availability gate + waiting-list slot (R112 fix): createReservation routes file-marked-Unavailable resources to the waiting list instead of accepting an active booking; WaitingEntry gained date/startTime/endTime so a promoted student keeps their requested slot (processWaitingList no longer books empty times). Completed OJ's complexity_analysis.md §3 + fixed stale "menu stubbed" README claim | make check, 3 smoke runs (R112 queues, R101 conflict queues, cancel 301 promotes with 09/15/2026)
+2026-10-06 | [logan] | ReportGenerator: implemented all four final-submission reports (active reservations, resource utilization, most-requested with hand-written quick sort, waiting-list stats) + fixed constructor reference-member init | make check, harness run (R101 2 active; sort descending by count)
+2026-10-06 | [logan] | Sorting: replaced std::sort in sortResources with a private hand-written quick sort (Lomuto partition, comparator lambda) so the final-submission spec's "implement the sort ourselves" is met | make check, sort harness (resources reorder A-Z by name, PASS)
+2026-10-06 | [logan] | Searching: LinkedList::filter (predicate walk) + findReservationsByStudent (lambda delegation), closing the last declared-but-empty final-submission method | make check, find harness (student 1016 -> 1 reservation, absent id -> 0, PASS)
 11. GITHUB REPOSITORY
 ----------------------------------------------------------------
     https://github.com/MrSpaghatti/2110_project_1

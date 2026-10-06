@@ -117,6 +117,10 @@ bool LinkedList::hasConflict(const std::string& resourceId,const std::string& da
     return false;
 }
 
+// keep every reservation the predicate accepts; the list itself is
+// unchanged. O(n) walk, same shape as find()/countFor, but the test is
+// handed in as a lambda so one filter serves any search (student id,
+// resource id, ...). Returns matches in list order, empty if none.
 vector<Reservation> LinkedList::filter(const function<bool(const Reservation&)>& keep) const{
     vector<Reservation> result;
 

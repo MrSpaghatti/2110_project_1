@@ -191,12 +191,19 @@ bool ReservationManager::findResource(const string &id) const {
   return false;
 }
 
+// search by student id: hand the active list a lambda that keeps
+// reservations whose studentId matches. filter() does the walking, so
+// this stays one line. Lambda captures studentId by value so the copy
+// lives in the closure for the whole call.
 vector<Reservation> ReservationManager::findReservationsByStudent(const string &studentId) const {
     return active_.filter([studentId](const Reservation& r) {
         return r.getStudentId() == studentId;
     });
 }
 
+// reorder resources_ by the chosen criteria. The lambda picks the
+// "comes before" test; quickSort does the actual work. No std::sort -
+// the spec wants us to implement the sort (D-spec note in header).
 void ReservationManager::sortResources(const string &criteria) {
   if (criteria == "name") {
       quickSort(resources_, 0, resources_.size() - 1, [](const Resource &a, const Resource &b) {
@@ -215,6 +222,10 @@ void ReservationManager::sortResources(const string &criteria) {
   }
 }
 
+// hand-written quick sort over a vector<Resource> (spec requirement).
+// Same Lomuto partition as ReportGenerator::quickSort, but the order
+// test comes in as a lambda ("before(x,y) == should x come first").
+// Average O(n log n), worst O(n^2) on already-sorted input.
 void ReservationManager::quickSort(vector<Resource> &v, int lo, int hi, const function<bool(const Resource&, const Resource&)> &before) {
     if (lo >= hi) return;
 

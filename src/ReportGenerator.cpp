@@ -63,9 +63,10 @@ void ReportGenerator::waitingStatsReport() const {
     cout << "Total: " << total << " students waiting" << endl;
 }
 
-// quickSort(v, lo, hi): recursive quick sort comparing the second
-//   element of each pair (the count) so it sorts descending. Follow
-//   the same structure as the LinkedList quickSort.
+// hand-written quick sort over (resourceId, count) pairs (spec wants
+// us to implement the sort ourselves). Same Lomuto partition as
+// ReservationManager::quickSort, but compares v[j].second (the count)
+// with >= so bigger counts land left: DESCENDING. Average O(n log n).
 void ReportGenerator::quickSort(std::vector<std::pair<std::string, int> > &v, int lo, int hi) const {
     if (lo >= hi) return;
 
