@@ -1,6 +1,7 @@
 #include <iostream>
 #include "FileLoader.h"
 #include "ReservationManager.h"
+#include "ReportGenerator.h"
 using namespace std;
 
 int main() {
@@ -11,9 +12,10 @@ int main() {
     ReservationManager manager;
     manager.loadData("data/resources.txt", "data/reservations.txt");
 
-    // The menu loop: show options, read a choice, do something, repeat,
-    // until the user picks quit. do/while so the menu always shows at
-    // least once.
+    // One ReportGenerator, built once. It holds a reference to the manager
+    // and just reads its data for the four reports.
+    ReportGenerator gen(manager);
+
     int choice = 0;
     do {
         cout << endl << "===== Campus Resource Reservation System =====" << endl;
@@ -24,14 +26,18 @@ int main() {
         cout << "5. Display waiting lists" << endl;
         cout << "6. Display cancellation history" << endl;
         cout << "7. Display active reservations" << endl;
-        cout << "8. Quit" << endl;
+        cout << "8. Search" << endl;
+        cout << "9. Sort resources" << endl;
+        cout << "10. Reports" << endl;
+        cout << "11. Quit" << endl;
         cout << "Choice: ";
         cin >> choice;
 
         switch (choice) {
-            case 1:
+            case 1: {
                 manager.displayResources();
                 break;
+            }
 
             case 2: {
                 string studentId;
@@ -59,8 +65,8 @@ int main() {
                 // treats empty as "skip this check" (D12 convention).
                 if (date == "0") date = "";
                 if (startTime == "0") startTime = "";
-                if (endTime == "0") endTime = "";
 
+                if (endTime == "0") endTime = "";
                 if (manager.createReservation(studentId, studentName, resourceId, date, startTime, endTime)){
                     cout << "Reservation created." << endl;
                 } else {
@@ -101,39 +107,123 @@ int main() {
                 break;
             }
 
-            case 7:
+            case 7: {
                 manager.displayActiveReservations();
                 break;
+            }
 
-            case 8:
+            case 8: {
+                // Search: pick which collection to look in, read the id,
+                // call the matching find function.
+                int searchChoice = 0;
+                cout << endl << "--- Search ---" << endl;
+                cout << "1. By resource ID" << endl;
+                cout << "2. By reservation ID" << endl;
+                cout << "3. By student ID" << endl;
+                cout << "Choice: ";
+                cin >> searchChoice;
+
+                if (searchChoice == 1) {
+                    string id;
+                    cout << "Enter resource ID: ";
+                    cin >> id;
+                    if (manager.findResource(id)) {
+                        cout << "Resource found." << endl;
+                    } else {
+                        cout << "Resource not found." << endl;
+                    }
+                } else if (searchChoice == 2) {
+                    string id;
+                    cout << "Enter reservation ID: ";
+                    cin >> id;
+                    if (manager.findReservation(id)) {
+                        cout << "Reservation found." << endl;
+                    } else {
+                        cout << "Reservation not found." << endl;
+                    }
+                } else if (searchChoice == 3) {
+                    string studentId;
+                    cout << "Enter student ID: ";
+                    cin >> studentId;
+                    vector<Reservation> matches = manager.findReservationsByStudent(studentId);
+                    if (matches.empty()) {
+                        cout << "No reservations found for that student." << endl;
+                    } else {
+                        for (const Reservation &r : matches) {
+                            r.print();
+                        }
+                    }
+                } else {
+                    cout << "Invalid choice." << endl;
+                }
+                break;
+            }
+
+            case 9: {
+                // Sort: pick the criteria, reorder, then show the new order
+                // so the sort is visible. sortResources() takes the criteria
+                // string and does the quick sort.
+                int sortChoice = 0;
+                cout << endl << "--- Sort Resources ---" << endl;
+                cout << "1. By name" << endl;
+                cout << "2. By type" << endl;
+                cout << "3. By availability" << endl;
+                cout << "Choice: ";
+                cin >> sortChoice;
+
+                if (sortChoice == 1) {
+                    manager.sortResources("name");
+                } else if (sortChoice == 2) {
+                    manager.sortResources("type");
+                } else if (sortChoice == 3) {
+                    manager.sortResources("availability");
+                } else {
+                    cout << "Invalid choice." << endl;
+                }
+                manager.displayResources();
+                break;
+            }
+
+            case 10: {
+                // Reports: four read-only summaries from ReportGenerator.
+                int reportChoice = 0;
+                cout << endl << "--- Reports ---" << endl;
+                cout << "1. Active reservations" << endl;
+                cout << "2. Resource utilization" << endl;
+                cout << "3. Most requested resources" << endl;
+                cout << "4. Waiting list statistics" << endl;
+                cout << "Choice: ";
+                cin >> reportChoice;
+
+                if (reportChoice == 1) {
+                    gen.activeReservationsReport();
+                } else if (reportChoice == 2) {
+                    gen.utilizationReport();
+                } else if (reportChoice == 3) {
+                    gen.mostRequestedReport();
+                } else if (reportChoice == 4) {
+                    gen.waitingStatsReport();
+                } else {
+                    cout << "Invalid choice." << endl;
+                }
+                break;
+            }
+
+            case 11: {
                 cout << "Goodbye." << endl;
                 break;
+            }
 
-            // Phase 2 menu additions (final submission): search, sort,
-            // reports. Add these and renumber Quit up to 12:
-            //   9.  Search - submenu: by resource ID, reservation ID, or
-            //       student ID (findResource / findReservation /
-            //       findReservationsByStudent)
-            //   10. Sort - submenu: name / type / date. Build the
-            //       comparator lambda, call sortResources(criteria).
-            //   11. Reports - submenu: the four ReportGenerator reports.
-            //       Construct ReportGenerator gen(manager); once, before
-            //       the loop.
-            // Keep the bad-input guard working for the new range.
-
-            default:
+            default: {
                 // Bad input guard: a LETTER in the choice box makes
-                // `cin >> choice` fail and leaves garbage in the stream,
-                // which can spin this loop forever. clear() resets the
-                // failure flag, ignore() drains up to 10000 chars or the
-                // newline, whichever comes first, so the next read starts
-                // fresh. (Verified 2026-09-08: exit 0 on letter input.)
-                cout << "Invalid choice. Pick 1-8.\n";
+                // `cin >> choice` fail and leaves garbage in the stream.
+                // clear() resets the failure flag, ignore() drains it.
+                cout << "Invalid choice. Pick 1-11.\n";
                 cin.clear();
                 cin.ignore(10000, '\n');
                 break;
-        }
-    } while (choice != 8);
-
+            }
+        }                            // end switch
+    } while (choice != 11);          // closes the do-loop
     return 0;
 }
