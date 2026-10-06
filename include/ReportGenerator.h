@@ -42,7 +42,7 @@ private:
   // sort the (resourceId, count) pairs by count descending. Same
   // comparator idea as the LinkedList sort, but on a vector of pairs.
   // Used by mostRequestedReport.
-  void quickSort(std::vector<std::pair<std::string, int>> &v, int lo, int hi);
+  void quickSort(std::vector<std::pair<std::string, int>> &v, int lo, int hi) const;
 
   const ReservationManager &manager_;   // the system these reports read
 };

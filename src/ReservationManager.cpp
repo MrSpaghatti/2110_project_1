@@ -193,21 +193,37 @@ bool ReservationManager::findResource(const string &id) const {
 
 void ReservationManager::sortResources(const string &criteria) {
   if (criteria == "name") {
-    sort(resources_.begin(), resources_.end(),
-          [](const Resource &a, const Resource &b) {
-            return a.getName() < b.getName();
-          });
+      quickSort(resources_, 0, resources_.size() - 1, [](const Resource &a, const Resource &b) {
+          return a.getName() < b.getName();
+      });
   } else if (criteria == "type") {
-    sort(resources_.begin(), resources_.end(),
-          [](const Resource &a, const Resource &b) {
-            return a.getType() < b.getType();
-          });
+      quickSort(resources_, 0, resources_.size() - 1, [](const Resource &a, const Resource &b) {
+          return a.getType() < b.getType();
+      });
   } else if (criteria == "availability") {
-    sort(resources_.begin(), resources_.end(),
-          [](const Resource &a, const Resource &b) {
-            return a.isAvailable() && !b.isAvailable();
-          });
+      quickSort(resources_, 0, resources_.size() - 1, [](const Resource &a, const Resource &b) {
+          return a.isAvailable() && !b.isAvailable();
+      });
   } else {
-    cout << "Invalid sorting criteria: " << criteria << endl;
+      cout << "Invalid sorting criteria: " << criteria << endl;
   }
+}
+
+void ReservationManager::quickSort(vector<Resource> &v, int lo, int hi, const function<bool(const Resource&, const Resource&)> &before) {
+    if (lo >= hi) return;
+
+    Resource pivot = v[hi];
+    int smaller = lo;
+
+    for (int j = lo; j < hi; j++){
+        if (before(v[j], pivot)) {
+            swap(v[smaller], v[j]);
+            smaller++;
+        }
+    }
+    swap(v[smaller], v[hi]);
+
+    quickSort(v, lo, smaller - 1, before);
+    quickSort(v, smaller + 1, hi, before);
+
 }
