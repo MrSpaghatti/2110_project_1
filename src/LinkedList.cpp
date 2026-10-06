@@ -116,3 +116,16 @@ bool LinkedList::hasConflict(const std::string& resourceId,const std::string& da
     }
     return false;
 }
+
+vector<Reservation> LinkedList::filter(const function<bool(const Reservation&)>& keep) const{
+    vector<Reservation> result;
+
+    ReservationNode* current = head_;
+    while (current != nullptr) {
+        if (keep(current->data)) {
+            result.push_back(current->data);
+        }
+        current = current->next;
+    }
+    return result;
+}

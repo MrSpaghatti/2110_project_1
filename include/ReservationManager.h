@@ -74,8 +74,7 @@ public:
   // "find reservations associated with a student" example). Reuse
   // active_.filter(...) with a studentId predicate instead of writing a
   // second loop. Returns every match, empty vector if none.
-  std::vector<Reservation> findReservationsByStudent(
-      const std::string &studentId) const;
+  std::vector<Reservation> findReservationsByStudent(const std::string &studentId) const;
 
   // sorting: reorder resources (by name/type) before display. Body uses
   // the private quickSort below - std::sort is off the table since the

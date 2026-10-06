@@ -191,6 +191,12 @@ bool ReservationManager::findResource(const string &id) const {
   return false;
 }
 
+vector<Reservation> ReservationManager::findReservationsByStudent(const string &studentId) const {
+    return active_.filter([studentId](const Reservation& r) {
+        return r.getStudentId() == studentId;
+    });
+}
+
 void ReservationManager::sortResources(const string &criteria) {
   if (criteria == "name") {
       quickSort(resources_, 0, resources_.size() - 1, [](const Resource &a, const Resource &b) {
