@@ -150,6 +150,10 @@ format: date | member | work done | verified by
 2026-10-06 | [logan] | ReportGenerator: implemented all four final-submission reports (active reservations, resource utilization, most-requested with hand-written quick sort, waiting-list stats) + fixed constructor reference-member init | make check, harness run (R101 2 active; sort descending by count)
 2026-10-06 | [logan] | Sorting: replaced std::sort in sortResources with a private hand-written quick sort (Lomuto partition, comparator lambda) so the final-submission spec's "implement the sort ourselves" is met | make check, sort harness (resources reorder A-Z by name, PASS)
 2026-10-06 | [logan] | Searching: LinkedList::filter (predicate walk) + findReservationsByStudent (lambda delegation), closing the last declared-but-empty final-submission method | make check, find harness (student 1016 -> 1 reservation, absent id -> 0, PASS)
+2026-10-07 | [Hoang Trung Le] | Reported CELL/Linux compile failure in displayResources() caused by localtime_r portability and FIFO waiting-list conflict fix  
+2026-10-07 | [Hoang Trung Le] | Requested CLI input hardening in main.cpp: line-based input, strict menu-choice parsing, clean EOF exit, and clear unknown-resource handling  
+2026-10-07 | [Hoang Trung Le] | Follow-up review of main.cpp input-hardening revision; requested regression checks for alphabetic and malformed menu choices, submenu recovery, end-of-input, unknown resource IDs, and valid reservation creation 
+2026-10-07 | [Hoang Trung Le] | Added reservation-slot validation for calendar dates and paired 24-hour times; rejects malformed, reversed, and incomplete time ranges before they can be booked or queued 
 11. GITHUB REPOSITORY
 ----------------------------------------------------------------
     https://github.com/MrSpaghatti/2110_project_1
