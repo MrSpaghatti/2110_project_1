@@ -43,6 +43,13 @@ public:
       const std::string &startTime,
       const std::string &endTime
   );                                     // if conflict -> enqueue on waiting list
+  // Empty result means the slot is valid; otherwise returns a user-readable
+  // explanation. Empty date/times represent no constraint.
+  std::string validateReservationSlot(
+      const std::string &date,
+      const std::string &startTime,
+      const std::string &endTime
+  ) const;
   // ^ D12 (2026-09-16, professor clarification): "available" is NOT just the
   //   resource's Available flag — traverse the active list and check for
   //   resource + date + time conflicts (LinkedList::hasConflict). Call

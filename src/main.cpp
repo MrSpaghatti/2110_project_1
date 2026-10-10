@@ -1,23 +1,51 @@
 #include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 #include "FileLoader.h"
 #include "ReservationManager.h"
 #include "ReportGenerator.h"
 using namespace std;
 
+enum class InputStatus {
+    Ok,
+    Invalid,
+    End
+};
+
+bool readLine(const string &prompt, string &value) {
+    cout << prompt;
+    if (!getline(cin, value)) {
+        cout << endl << "Input ended. Exiting." << endl;
+        return false;
+    }
+    return true;
+}
+
+InputStatus readChoice(const string &prompt, int &choice) {
+    string line;
+    if (!readLine(prompt, line)) {
+        return InputStatus::End;
+    }
+
+    istringstream input(line);
+    if (!(input >> choice)) {
+        return InputStatus::Invalid;
+    }
+    input >> ws;
+    return input.eof() ? InputStatus::Ok : InputStatus::Invalid;
+}
+
 int main() {
     // Load the catalog ONCE, before the loop. Every menu option that needs
-    // the resource list reads from the manager — do NOT re-read the file
-    // inside each option, and do NOT keep a second local vector (the
-    // availability text shown must agree with what createReservation checks).
+    // the resource list reads from the manager.
     ReservationManager manager;
     manager.loadData("data/resources.txt", "data/reservations.txt");
 
-    // One ReportGenerator, built once. It holds a reference to the manager
-    // and just reads its data for the four reports.
+    // One ReportGenerator, built once. It reads the manager's data for reports.
     ReportGenerator gen(manager);
 
-    int choice = 0;
-    do {
+    while (true) {
         cout << endl << "===== Campus Resource Reservation System =====" << endl;
         cout << "1. Display all resources" << endl;
         cout << "2. Create a reservation" << endl;
@@ -30,8 +58,16 @@ int main() {
         cout << "9. Sort resources" << endl;
         cout << "10. Reports" << endl;
         cout << "11. Quit" << endl;
-        cout << "Choice: ";
-        cin >> choice;
+
+        int choice = 0;
+        InputStatus status = readChoice("Choice: ", choice);
+        if (status == InputStatus::End) {
+            break;
+        }
+        if (status == InputStatus::Invalid) {
+            cout << "Invalid choice. Enter a number from 1 to 11." << endl;
+            continue;
+        }
 
         switch (choice) {
             case 1: {
@@ -47,40 +83,41 @@ int main() {
                 string startTime;
                 string endTime;
 
-                cout << "Enter student ID: ";
-                cin >> studentId;
-                cout << "Enter student name: ";
-                cin.ignore();
-                getline(cin, studentName);
-                cout << "Enter resource ID: ";
-                cin >> resourceId;
-                cout << "Enter date (MM/DD/YYYY, 0 for none): ";
-                cin >> date;
-                cout << "Enter start time (HH:MM, 0 for none): ";
-                cin >> startTime;
-                cout << "Enter end time (HH:MM, 0 for none): ";
-                cin >> endTime;
+                if (!readLine("Enter student ID: ", studentId) ||
+                    !readLine("Enter student name: ", studentName) ||
+                    !readLine("Enter resource ID: ", resourceId) ||
+                    !readLine("Enter date (MM/DD/YYYY, 0 for none): ", date) ||
+                    !readLine("Enter start time (HH:MM, 0 for none): ", startTime) ||
+                    !readLine("Enter end time (HH:MM, 0 for none): ", endTime)) {
+                    return 0;
+                }
 
-                // "0" typed = no constraint; store as "" because hasConflict
-                // treats empty as "skip this check" (D12 convention).
+                // "0" means no time constraint.
                 if (date == "0") date = "";
                 if (startTime == "0") startTime = "";
-
                 if (endTime == "0") endTime = "";
-                if (manager.createReservation(studentId, studentName, resourceId, date, startTime, endTime)){
+
+                string slotError = manager.validateReservationSlot(date, startTime, endTime);
+                if (!slotError.empty()) {
+                    cout << "Invalid reservation slot: " << slotError << endl;
+                } else if (!manager.findResource(resourceId)) {
+                    cout << "Resource not found." << endl;
+                } else if (manager.createReservation(studentId, studentName, resourceId,
+                                                     date, startTime, endTime)) {
                     cout << "Reservation created." << endl;
                 } else {
-                    cout << "Unavailable - added to waiting list." << endl;
+                    cout << "Unavailable - request added to waiting list." << endl;
                 }
                 break;
             }
 
             case 3: {
                 string reservationId;
-                cout << "Enter reservation ID: ";
-                cin >> reservationId;
+                if (!readLine("Enter reservation ID: ", reservationId)) {
+                    return 0;
+                }
 
-                if (manager.cancelReservation(reservationId)){
+                if (manager.cancelReservation(reservationId)) {
                     cout << "Reservation cancelled." << endl;
                 } else {
                     cout << "Reservation not found." << endl;
@@ -89,7 +126,7 @@ int main() {
             }
 
             case 4: {
-                if (manager.undoCancellation()){
+                if (manager.undoCancellation()) {
                     cout << "Most recent cancellation undone." << endl;
                 } else {
                     cout << "Nothing to undo." << endl;
@@ -113,87 +150,81 @@ int main() {
             }
 
             case 8: {
-                // Search: pick which collection to look in, read the id,
-                // call the matching find function.
                 int searchChoice = 0;
                 cout << endl << "--- Search ---" << endl;
                 cout << "1. By resource ID" << endl;
                 cout << "2. By reservation ID" << endl;
                 cout << "3. By student ID" << endl;
-                cout << "Choice: ";
-                cin >> searchChoice;
+                status = readChoice("Choice: ", searchChoice);
+                if (status == InputStatus::End) return 0;
+                if (status == InputStatus::Invalid ||
+                    searchChoice < 1 || searchChoice > 3) {
+                    cout << "Invalid choice. Enter 1, 2, or 3." << endl;
+                    break;
+                }
 
+                string id;
                 if (searchChoice == 1) {
-                    string id;
-                    cout << "Enter resource ID: ";
-                    cin >> id;
-                    if (manager.findResource(id)) {
-                        cout << "Resource found." << endl;
-                    } else {
-                        cout << "Resource not found." << endl;
-                    }
+                    if (!readLine("Enter resource ID: ", id)) return 0;
+                    cout << (manager.findResource(id) ? "Resource found." :
+                                                        "Resource not found.") << endl;
                 } else if (searchChoice == 2) {
-                    string id;
-                    cout << "Enter reservation ID: ";
-                    cin >> id;
-                    if (manager.findReservation(id)) {
-                        cout << "Reservation found." << endl;
-                    } else {
-                        cout << "Reservation not found." << endl;
-                    }
-                } else if (searchChoice == 3) {
-                    string studentId;
-                    cout << "Enter student ID: ";
-                    cin >> studentId;
-                    vector<Reservation> matches = manager.findReservationsByStudent(studentId);
+                    if (!readLine("Enter reservation ID: ", id)) return 0;
+                    cout << (manager.findReservation(id) ? "Reservation found." :
+                                                           "Reservation not found.") << endl;
+                } else {
+                    if (!readLine("Enter student ID: ", id)) return 0;
+                    vector<Reservation> matches = manager.findReservationsByStudent(id);
                     if (matches.empty()) {
                         cout << "No reservations found for that student." << endl;
                     } else {
-                        for (const Reservation &r : matches) {
-                            r.print();
+                        for (const Reservation &reservation : matches) {
+                            reservation.print();
                         }
                     }
-                } else {
-                    cout << "Invalid choice." << endl;
                 }
                 break;
             }
 
             case 9: {
-                // Sort: pick the criteria, reorder, then show the new order
-                // so the sort is visible. sortResources() takes the criteria
-                // string and does the quick sort.
                 int sortChoice = 0;
                 cout << endl << "--- Sort Resources ---" << endl;
                 cout << "1. By name" << endl;
                 cout << "2. By type" << endl;
                 cout << "3. By availability" << endl;
-                cout << "Choice: ";
-                cin >> sortChoice;
+                status = readChoice("Choice: ", sortChoice);
+                if (status == InputStatus::End) return 0;
+                if (status == InputStatus::Invalid ||
+                    sortChoice < 1 || sortChoice > 3) {
+                    cout << "Invalid choice. Enter 1, 2, or 3." << endl;
+                    break;
+                }
 
                 if (sortChoice == 1) {
                     manager.sortResources("name");
                 } else if (sortChoice == 2) {
                     manager.sortResources("type");
-                } else if (sortChoice == 3) {
-                    manager.sortResources("availability");
                 } else {
-                    cout << "Invalid choice." << endl;
+                    manager.sortResources("availability");
                 }
                 manager.displayResources();
                 break;
             }
 
             case 10: {
-                // Reports: four read-only summaries from ReportGenerator.
                 int reportChoice = 0;
                 cout << endl << "--- Reports ---" << endl;
                 cout << "1. Active reservations" << endl;
                 cout << "2. Resource utilization" << endl;
                 cout << "3. Most requested resources" << endl;
                 cout << "4. Waiting list statistics" << endl;
-                cout << "Choice: ";
-                cin >> reportChoice;
+                status = readChoice("Choice: ", reportChoice);
+                if (status == InputStatus::End) return 0;
+                if (status == InputStatus::Invalid ||
+                    reportChoice < 1 || reportChoice > 4) {
+                    cout << "Invalid choice. Enter a number from 1 to 4." << endl;
+                    break;
+                }
 
                 if (reportChoice == 1) {
                     gen.activeReservationsReport();
@@ -201,29 +232,23 @@ int main() {
                     gen.utilizationReport();
                 } else if (reportChoice == 3) {
                     gen.mostRequestedReport();
-                } else if (reportChoice == 4) {
-                    gen.waitingStatsReport();
                 } else {
-                    cout << "Invalid choice." << endl;
+                    gen.waitingStatsReport();
                 }
                 break;
             }
 
             case 11: {
                 cout << "Goodbye." << endl;
-                break;
+                return 0;
             }
 
             default: {
-                // Bad input guard: a LETTER in the choice box makes
-                // `cin >> choice` fail and leaves garbage in the stream.
-                // clear() resets the failure flag, ignore() drains it.
-                cout << "Invalid choice. Pick 1-11.\n";
-                cin.clear();
-                cin.ignore(10000, '\n');
+                cout << "Invalid choice. Enter a number from 1 to 11." << endl;
                 break;
             }
-        }                            // end switch
-    } while (choice != 11);          // closes the do-loop
+        }
+    }
+
     return 0;
 }

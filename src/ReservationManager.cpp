@@ -4,6 +4,70 @@
 #include <ctime>
 #include <iostream>
 using namespace std;
+
+namespace {
+bool isDigit(char value) {
+  return value >= '0' && value <= '9';
+}
+
+bool parseTwoDigits(const string &value, size_t position, int &number) {
+  if (position + 1 >= value.size() ||
+      !isDigit(value[position]) || !isDigit(value[position + 1])) {
+    return false;
+  }
+  number = (value[position] - '0') * 10 + (value[position + 1] - '0');
+  return true;
+}
+
+bool isValidDate(const string &date) {
+  if (date.size() != 10 || date[2] != '/' || date[5] != '/') {
+    return false;
+  }
+
+  int month = 0;
+  int day = 0;
+  if (!parseTwoDigits(date, 0, month) || !parseTwoDigits(date, 3, day) ||
+      !isDigit(date[6]) || !isDigit(date[7]) ||
+      !isDigit(date[8]) || !isDigit(date[9])) {
+    return false;
+  }
+  int year = (date[6] - '0') * 1000 + (date[7] - '0') * 100 +
+             (date[8] - '0') * 10 + (date[9] - '0');
+  if (year == 0 || month < 1 || month > 12) {
+    return false;
+  }
+
+  const int daysInMonth[] = {31, 28, 31, 30, 31, 30,
+                             31, 31, 30, 31, 30, 31};
+  int maxDay = daysInMonth[month - 1];
+  bool leapYear = year % 400 == 0 || (year % 4 == 0 && year % 100 != 0);
+  if (month == 2 && leapYear) {
+    maxDay = 29;
+  }
+  return day >= 1 && day <= maxDay;
+}
+
+bool parseTime(const string &time, int &minutes, bool allowEndOfDay) {
+  if (time.size() != 5 || time[2] != ':' ||
+      !isDigit(time[0]) || !isDigit(time[1]) ||
+      !isDigit(time[3]) || !isDigit(time[4])) {
+    return false;
+  }
+
+  int hour = (time[0] - '0') * 10 + (time[1] - '0');
+  int minute = (time[3] - '0') * 10 + (time[4] - '0');
+  if (allowEndOfDay && hour == 24 && minute == 0) {
+    minutes = 24 * 60;
+    return true;
+  }
+  if (hour > 23 || minute > 59) {
+    return false;
+  }
+  minutes = hour * 60 + minute;
+  return true;
+}
+}
+
 // implementation of the ReservationManager class declared in ReservationManager.h
 
 ReservationManager::ReservationManager() : nextReservationId_(0) {
@@ -40,12 +104,50 @@ vector<Resource> ReservationManager::getResources() const {
   return resources_;
 }
 
+string ReservationManager::validateReservationSlot(
+    const string &date,
+    const string &startTime,
+    const string &endTime
+) const {
+  if (!date.empty() && !isValidDate(date)) {
+    return "Date must be a real date in MM/DD/YYYY format, or 0 for none.";
+  }
+
+  if (startTime.empty() && endTime.empty()) {
+    return "";
+  }
+  if (startTime.empty() || endTime.empty()) {
+    return "Enter both start and end times, or enter 0 for both.";
+  }
+
+  int startMinutes = 0;
+  int endMinutes = 0;
+  if (!parseTime(startTime, startMinutes, false) ||
+      !parseTime(endTime, endMinutes, true)) {
+    return "Times must use 24-hour HH:MM format; only an end time may be 24:00.";
+  }
+  if (endMinutes <= startMinutes) {
+    return "End time must be later than start time; overnight reservations are not supported.";
+  }
+  return "";
+}
+
 void ReservationManager::displayResources() const {
   cout << "===== Resources =====" << endl;
   // "right now" once, so every row answers the same question
   time_t t = time(nullptr);
   struct tm tmv;
-  localtime_r(&t, &tmv);
+#ifdef _WIN32
+  if (localtime_s(&tmv, &t) != 0) {
+    cerr << "Unable to determine the current local time." << endl;
+    return;
+  }
+#else
+  if (localtime_r(&t, &tmv) == nullptr) {
+    cerr << "Unable to determine the current local time." << endl;
+    return;
+  }
+#endif
   char dateBuf[16], timeBuf[8];
   strftime(dateBuf, sizeof(dateBuf), "%m/%d/%Y", &tmv); // "09/19/2026"
   strftime(timeBuf, sizeof(timeBuf), "%H:%M", &tmv);    // "23:48"
@@ -69,6 +171,10 @@ bool ReservationManager::createReservation(
     const string &startTime,
     const string &endTime
 ) {
+    if (!validateReservationSlot(date, startTime, endTime).empty()) {
+        return false;
+    }
+
     // 1. Resource must exist.
     bool found = false;
     bool available = false;
@@ -158,6 +264,10 @@ void ReservationManager::addToWaitingList(
 void ReservationManager::processWaitingList(const string &resourceId) {
   WaitingList &q = waitingQueues_[resourceId];
   if (q.isEmpty()) return;
+  const WaitingEntry next = q.front();
+  if (active_.hasConflict(resourceId, next.date, next.startTime, next.endTime)) {
+    return;
+  }
   WaitingEntry e = q.dequeue();
   string resId = to_string(nextReservationId_++);
   active_.insert(Reservation(resId, e.studentId, e.studentName,
