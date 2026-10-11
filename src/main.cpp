@@ -40,7 +40,11 @@ int main() {
     // Load the catalog ONCE, before the loop. Every menu option that needs
     // the resource list reads from the manager.
     ReservationManager manager;
-    manager.loadData("data/resources.txt", "data/reservations.txt");
+    if (!manager.loadData("data/resources.txt", "data/reservations.txt")) {
+        cerr << "Error: Could not load resources from data/resources.txt. "
+             << "Ensure the file exists and contains valid resource data." << endl;
+        return 1;
+    }
 
     // One ReportGenerator, built once. It reads the manager's data for reports.
     ReportGenerator gen(manager);
@@ -129,7 +133,7 @@ int main() {
                 if (manager.undoCancellation()) {
                     cout << "Most recent cancellation undone." << endl;
                 } else {
-                    cout << "Nothing to undo." << endl;
+                    cout << "Undo could not be completed." << endl;
                 }
                 break;
             }

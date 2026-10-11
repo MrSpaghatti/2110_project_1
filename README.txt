@@ -153,8 +153,13 @@ format: date | member | work done | verified by
 2026-10-07 | [Hoang Trung Le] | Reported CELL/Linux compile failure in displayResources() caused by localtime_r portability and FIFO waiting-list conflict fix  
 2026-10-07 | [Hoang Trung Le] | Requested CLI input hardening in main.cpp: line-based input, strict menu-choice parsing, clean EOF exit, and clear unknown-resource handling  
 2026-10-07 | [Hoang Trung Le] | Follow-up review of main.cpp input-hardening revision; requested regression checks for alphabetic and malformed menu choices, submenu recovery, end-of-input, unknown resource IDs, and valid reservation creation 
-2026-10-07 | [Hoang Trung Le] | Added reservation-slot validation for calendar dates and paired 24-hour times; rejects malformed, reversed, and incomplete time ranges before they can be booked or queued 
-11. GITHUB REPOSITORY
+2026-10-07 | [Hoang Trung Le] | Added reservation-slot validation for calendar dates and paired 24-hour times; rejects malformed, reversed, and incomplete time ranges before they can be booked or queued  
+2026-10-11 | [matthew] | Searching: implemented hand-written linear search (include/LinearSearch.h + src/LinearSearch.cpp: findResourceIndex, findReservationIndex, findReservationIndexesByStudent) and integrated it into ReservationManager (findResource, findReservation, findReservationsByStudent) so menu 8 searches run through our own algorithm, not std::find | g++ -std=c++11 -Wall -Wextra build clean; smoke runs (search R101 -> found, reservation 301 -> found, student 1001 -> 1 hit, unknown id -> not found)
+2026-10-11 | [matthew] | Fixes: (1) displayWaitingLists prints "No waiting lists." when all queues empty; (2) processWaitingList scans the whole queue for the first free slot (head-of-line blocking fix) instead of only the front; (3) Reports now give real report output (active-reservations total summary; utilization shows booking share %) so submenu 10 no longer duplicates menu 7 / menu 1 | g++ -std=c++11 -Wall -Wextra build clean; smoke runs (menu 5 empty -> "No waiting lists."; R110 queue: cancel 10:00 holder while 11:00 waiter still blocks -> 10:00 waiter promoted, 11:00 waiter stays queued; reports 1/2 show summaries)
+2026-10-11 | [Hoang Trung Le] | ReservationManager::undoCancellation: reject restoration when the cancelled reservation's slot now conflicts with an active reservation, preserving cancellation history | conflict regression test
+2026-10-11 | [Hoang Trung Le] | ReservationManager::createReservation: derive bookability from active slot conflicts instead of the resource file availability flag | unavailable-resource booking test
+2026-10-11 | [Hoang Trung Le] | src/main.cpp: stop startup with an error when loadData() cannot load resources | missing/empty resources-file test
+12. GITHUB REPOSITORY
 ----------------------------------------------------------------
     https://github.com/MrSpaghatti/2110_project_1
 
