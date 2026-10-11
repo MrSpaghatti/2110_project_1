@@ -51,6 +51,8 @@ Project1/
 |   |-- LinkedList.h
 |   |-- WaitingList.h
 |   |-- CancellationHistory.h
+|   |-- LinearSearch.h
+|   |-- ReportGenerator.h
 |   `-- ReservationManager.h
 |-- src/
 |   |-- main.cpp
@@ -61,19 +63,38 @@ Project1/
 |   |-- LinkedList.cpp
 |   |-- WaitingList.cpp
 |   |-- CancellationHistory.cpp
+|   |-- LinearSearch.cpp
+|   |-- ReportGenerator.cpp
 |   `-- ReservationManager.cpp
 |-- data/
 |   |-- resources.txt
 |   `-- reservations.txt
+|-- DECISIONS.md          design decisions log (why the code looks like this)
+|-- complexity_analysis.md  Big-O write-up for the graded operations
 |-- README.txt
 `-- Makefile
 
-5. DATA STRUCTURES USED
+5. DATA STRUCTURES & ALGORITHMS USED
 ----------------------------------------------------------------
+Structures:
 - Linked list  : active reservations (frequent insert/delete)
 - Queue        : waiting lists (FIFO fairness)
 - Stack        : cancellation history (undo = LIFO)
 - Vector       : resource inventory (fast traversal/sort)
+
+Hand-written algorithms (no std::find / std::sort):
+- Linear search (include/LinearSearch.h): findResourceIndex,
+  findReservationIndex, findReservationIndexesByStudent. One O(n) walk with
+  direct element access; returns the FIRST match. Backs menu 8.
+- Quick sort (Lomuto partition + comparator lambdas): LinkedList::quickSort
+  for reservations and ReportGenerator::quickSort for most-requested.
+  Average O(n log n), worst O(n^2).
+- Waiting-list promotion: processWaitingList scans the whole queue for the
+  first waiter whose slot is free (not just the front) so a blocked front
+  waiter cannot starve the rest. O(n) per promotion.
+
+See DECISIONS.md for the design rationale (D1-D14) and
+complexity_analysis.md for the full Big-O write-up.
 
 6. COMPILE & RUN
 ----------------------------------------------------------------
