@@ -7,23 +7,33 @@ using namespace std;
 ReportGenerator::ReportGenerator(const ReservationManager &manager)
     : manager_(manager) {}
 
-// activeReservationsReport(): print the active reservation list (same
-// shape as displayActiveReservations).
+// activeReservationsReport(): a REPORT view of the active list - its own
+// header plus a count summary - so it is not just a re-print of menu 7.
 void ReportGenerator::activeReservationsReport() const {
+    cout << "===== Active Reservations Report =====" << endl;
     manager_.displayActiveReservations();
+    cout << "--------------------------------------" << endl;
+    cout << "Total active reservations: " << manager_.active_.size() << endl;
 }
 
-// utilizationReport(): one line per resource: id/name + how many active
-// reservations it has (active_.countFor(id)) + Available/Unavailable text.
+// utilizationReport(): per-resource active booking count AND that count's
+// share of all active bookings, plus a grand total. Distinct from menu 1
+// (which shows live Available/Unavailable status, not booking shares).
 void ReportGenerator::utilizationReport() const {
-    cout << "===== Resource Utilization =====" << endl;
+    cout << "===== Resource Utilization Report =====" << endl;
 
     const auto& resources = manager_.resources_;
+    int total = manager_.active_.size();
 
-    for (const auto& res: resources){
+    for (const auto& res : resources) {
         int count = manager_.active_.countFor(res.getId());
-        res.print(count, false);
+        int share = (total > 0) ? (100 * count / total) : 0;
+        cout << res.getId() << " | " << res.getName()
+             << " | active bookings: " << count
+             << " | share: " << share << "%" << endl;
     }
+
+    cout << "Total active bookings: " << total << endl;
 }
 
 // mostRequestedReport(): tally counts per resourceId into a

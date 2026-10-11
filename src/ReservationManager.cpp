@@ -260,27 +260,53 @@ void ReservationManager::addToWaitingList(
     waitingQueues_[resourceId].enqueue(entry);
     }
 
-// promote the longest-waiting student; the slot stays booked, so the
-// resource itself never flips back to "available" here.
+// promote the longest-waiting student whose slot is actually free.
+// Head-of-line blocking fix: the FRONT waiter's slot may still be taken while
+// a later waiter's slot has freed up, so we scan the whole queue for the first
+// entry with no active conflict instead of only checking the front. We drain
+// the queue into a buffer, promote the first match, then re-enqueue everyone
+// else in their original relative order (FIFO among the remaining waiters).
 void ReservationManager::processWaitingList(const string &resourceId) {
   WaitingList &q = waitingQueues_[resourceId];
   if (q.isEmpty()) return;
-  const WaitingEntry next = q.front();
-  if (active_.hasConflict(resourceId, next.date, next.startTime, next.endTime)) {
-    return;
+
+  vector<WaitingEntry> pending;
+  while (!q.isEmpty()) {
+    pending.push_back(q.dequeue());
   }
-  WaitingEntry e = q.dequeue();
-  string resId = to_string(nextReservationId_++);
-  active_.insert(Reservation(resId, e.studentId, e.studentName,
-                             resourceId, e.date, e.startTime, e.endTime));
+
+  int promoted = -1;
+  for (int i = 0; i < (int)pending.size(); ++i) {
+    if (!active_.hasConflict(resourceId, pending[i].date,
+                             pending[i].startTime, pending[i].endTime)) {
+      promoted = i;
+      break;
+    }
+  }
+
+  for (int i = 0; i < (int)pending.size(); ++i) {
+    if (i == promoted) {
+      string resId = to_string(nextReservationId_++);
+      active_.insert(Reservation(resId, pending[i].studentId, pending[i].studentName,
+                                 resourceId, pending[i].date,
+                                 pending[i].startTime, pending[i].endTime));
+    } else {
+      q.enqueue(pending[i]);
+    }
+  }
 }
 
 void ReservationManager::displayWaitingLists() const {
+  bool hasAny = false;
   for (const auto& pair : waitingQueues_) {
      if (!pair.second.isEmpty()) {
+          hasAny = true;
           cout << "Resource ID: " << pair.first << endl;
           pair.second.display();
      }
+  }
+  if (!hasAny) {
+    cout << "No waiting lists." << endl;
   }
 }
 
