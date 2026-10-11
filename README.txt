@@ -252,6 +252,7 @@ format: date | member | work done | verified by
 2026-10-11 | [Hoang Trung Le] | ReservationManager::undoCancellation: reject restoration when the cancelled reservation's slot now conflicts with an active reservation, preserving cancellation history | conflict regression test
 2026-10-11 | [Hoang Trung Le] | ReservationManager::createReservation: derive bookability from active slot conflicts instead of the resource file availability flag | unavailable-resource booking test
 2026-10-11 | [Hoang Trung Le] | src/main.cpp: stop startup with an error when loadData() cannot load resources | missing/empty resources-file test
+2026-10-11 | [matthew] | Repo maintenance/integration after PR #23: fetched with prune (stale remote branches sorting-milestone2, fix-merge-verified, que, feature/load-data removed upstream), fast-forwarded local main to the merge commit and confirmed it contains the search/waiting-list/report work alongside Hoang's undoCancellation/createReservation/startup changes; deleted the stale local feature/load-data. Repo now has only main (+ origin/HEAD) | g++ -std=c++11 -Wall -Wextra build clean; smoke run on merged main (menu 5 "No waiting lists.", search R101 found, reports, quit)
 12. GITHUB REPOSITORY
 ----------------------------------------------------------------
     https://github.com/MrSpaghatti/2110_project_1
