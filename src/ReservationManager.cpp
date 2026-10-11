@@ -1,5 +1,6 @@
 #include "ReservationManager.h"
 #include "FileLoader.h"
+#include "LinearSearch.h"
 #include <algorithm>
 #include <ctime>
 #include <iostream>
@@ -288,27 +289,28 @@ void ReservationManager::displayCancellationHistory() const {
 }
 
 bool ReservationManager::findReservation(const string &id) const {
-  Reservation* r = const_cast<LinkedList&>(active_).find(id);
-  return r != nullptr;
+  // hand-written linear search (D13): gather the active list into a vector,
+  // then scan it with findReservationIndex. No std::find.
+  vector<Reservation> all = active_.filter([](const Reservation&) { return true; });
+  return findReservationIndex(all, id) != -1;
 }
 
 bool ReservationManager::findResource(const string &id) const {
-  for (const auto& r : resources_) {
-    if (r.getId() == id) {
-      return true;
-    }
-  }
-  return false;
+  // hand-written linear search (D13) over the resource inventory.
+  return findResourceIndex(resources_, id) != -1;
 }
 
-// search by student id: hand the active list a lambda that keeps
-// reservations whose studentId matches. filter() does the walking, so
-// this stays one line. Lambda captures studentId by value so the copy
-// lives in the closure for the whole call.
+// search by student id: hand-written linear search. filter() collects the
+// active list, findReservationIndexesByStudent() walks it and keeps every
+// index whose studentId matches (a student may hold several reservations).
 vector<Reservation> ReservationManager::findReservationsByStudent(const string &studentId) const {
-    return active_.filter([studentId](const Reservation& r) {
-        return r.getStudentId() == studentId;
-    });
+    vector<Reservation> all = active_.filter([](const Reservation&) { return true; });
+    vector<int> matches = findReservationIndexesByStudent(all, studentId);
+    vector<Reservation> found;
+    for (int idx : matches) {
+        found.push_back(all[idx]);
+    }
+    return found;
 }
 
 // reorder resources_ by the chosen criteria. The lambda picks the

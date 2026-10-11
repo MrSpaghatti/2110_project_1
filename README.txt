@@ -23,12 +23,13 @@ A menu-based CLI app that allows students to reserve campus resources, i.e. stud
 - Undo the most recent cancellation (stack)
 - Waiting list per resource (FIFO queue)
 - Display waiting lists and cancellation history
-- Search: find a reservation or resource by ID, find all reservations
-  for a student (LinkedList::filter)
-- Hand-written LINEAR SEARCH (include/LinearSearch.h, src/LinearSearch.cpp):
-  findResourceIndex, findReservationIndex, findReservationIndexesByStudent.
-  No std::find / std::find_if / std::binary_search in the search path; the
-  algorithm is implemented, not called. Menu 7/8/9 wire it into the CLI.
+- Search (menu 8): find a resource by ID, a reservation by ID, and all
+  reservations for a student. Backed by a hand-written LINEAR SEARCH in
+  include/LinearSearch.h + src/LinearSearch.cpp
+  (findResourceIndex / findReservationIndex / findReservationIndexesByStudent).
+  No std::find / std::find_if / std::binary_search in the search path -- the
+  traversal and comparison are our own code. Linear (not binary) because the
+  inventory and active list are in file order, not sorted by ID.
 - Sort: reorder resources by name/type/availability with a hand-written
   quick sort (no std::sort)
 - Reports: active reservations, resource utilization, most-requested
@@ -157,7 +158,8 @@ format: date | member | work done | verified by
 2026-10-07 | [Hoang Trung Le] | Reported CELL/Linux compile failure in displayResources() caused by localtime_r portability and FIFO waiting-list conflict fix  
 2026-10-07 | [Hoang Trung Le] | Requested CLI input hardening in main.cpp: line-based input, strict menu-choice parsing, clean EOF exit, and clear unknown-resource handling  
 2026-10-07 | [Hoang Trung Le] | Follow-up review of main.cpp input-hardening revision; requested regression checks for alphabetic and malformed menu choices, submenu recovery, end-of-input, unknown resource IDs, and valid reservation creation 
-2026-10-07 | [Hoang Trung Le] | Added reservation-slot validation for calendar dates and paired 24-hour times; rejects malformed, reversed, and incomplete time ranges before they can be booked or queued 
+2026-10-07 | [Hoang Trung Le] | Added reservation-slot validation for calendar dates and paired 24-hour times; rejects malformed, reversed, and incomplete time ranges before they can be booked or queued  
+2026-10-11 | [matthew] | Searching: implemented hand-written linear search (include/LinearSearch.h + src/LinearSearch.cpp: findResourceIndex, findReservationIndex, findReservationIndexesByStudent) and integrated it into ReservationManager (findResource, findReservation, findReservationsByStudent) so menu 8 searches run through our own algorithm, not std::find | g++ -std=c++11 -Wall -Wextra build clean; smoke runs (search R101 -> found, reservation 301 -> found, student 1001 -> 1 hit, unknown id -> not found)
 11. GITHUB REPOSITORY
 ----------------------------------------------------------------
     https://github.com/MrSpaghatti/2110_project_1
