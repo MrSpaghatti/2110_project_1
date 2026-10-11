@@ -1,5 +1,6 @@
 #include "ReservationManager.h"
 #include "FileLoader.h"
+#include "LinearSearch.h"
 #include <algorithm>
 #include <ctime>
 #include <iostream>
@@ -261,27 +262,53 @@ void ReservationManager::addToWaitingList(
     waitingQueues_[resourceId].enqueue(entry);
     }
 
-// promote the longest-waiting student; the slot stays booked, so the
-// resource itself never flips back to "available" here.
+// promote the longest-waiting student whose slot is actually free.
+// Head-of-line blocking fix: the FRONT waiter's slot may still be taken while
+// a later waiter's slot has freed up, so we scan the whole queue for the first
+// entry with no active conflict instead of only checking the front. We drain
+// the queue into a buffer, promote the first match, then re-enqueue everyone
+// else in their original relative order (FIFO among the remaining waiters).
 void ReservationManager::processWaitingList(const string &resourceId) {
   WaitingList &q = waitingQueues_[resourceId];
   if (q.isEmpty()) return;
-  const WaitingEntry next = q.front();
-  if (active_.hasConflict(resourceId, next.date, next.startTime, next.endTime)) {
-    return;
+
+  vector<WaitingEntry> pending;
+  while (!q.isEmpty()) {
+    pending.push_back(q.dequeue());
   }
-  WaitingEntry e = q.dequeue();
-  string resId = to_string(nextReservationId_++);
-  active_.insert(Reservation(resId, e.studentId, e.studentName,
-                             resourceId, e.date, e.startTime, e.endTime));
+
+  int promoted = -1;
+  for (int i = 0; i < (int)pending.size(); ++i) {
+    if (!active_.hasConflict(resourceId, pending[i].date,
+                             pending[i].startTime, pending[i].endTime)) {
+      promoted = i;
+      break;
+    }
+  }
+
+  for (int i = 0; i < (int)pending.size(); ++i) {
+    if (i == promoted) {
+      string resId = to_string(nextReservationId_++);
+      active_.insert(Reservation(resId, pending[i].studentId, pending[i].studentName,
+                                 resourceId, pending[i].date,
+                                 pending[i].startTime, pending[i].endTime));
+    } else {
+      q.enqueue(pending[i]);
+    }
+  }
 }
 
 void ReservationManager::displayWaitingLists() const {
+  bool hasAny = false;
   for (const auto& pair : waitingQueues_) {
      if (!pair.second.isEmpty()) {
+          hasAny = true;
           cout << "Resource ID: " << pair.first << endl;
           pair.second.display();
      }
+  }
+  if (!hasAny) {
+    cout << "No waiting lists." << endl;
   }
 }
 
@@ -290,27 +317,28 @@ void ReservationManager::displayCancellationHistory() const {
 }
 
 bool ReservationManager::findReservation(const string &id) const {
-  Reservation* r = const_cast<LinkedList&>(active_).find(id);
-  return r != nullptr;
+  // hand-written linear search (D13): gather the active list into a vector,
+  // then scan it with findReservationIndex. No std::find.
+  vector<Reservation> all = active_.filter([](const Reservation&) { return true; });
+  return findReservationIndex(all, id) != -1;
 }
 
 bool ReservationManager::findResource(const string &id) const {
-  for (const auto& r : resources_) {
-    if (r.getId() == id) {
-      return true;
-    }
-  }
-  return false;
+  // hand-written linear search (D13) over the resource inventory.
+  return findResourceIndex(resources_, id) != -1;
 }
 
-// search by student id: hand the active list a lambda that keeps
-// reservations whose studentId matches. filter() does the walking, so
-// this stays one line. Lambda captures studentId by value so the copy
-// lives in the closure for the whole call.
+// search by student id: hand-written linear search. filter() collects the
+// active list, findReservationIndexesByStudent() walks it and keeps every
+// index whose studentId matches (a student may hold several reservations).
 vector<Reservation> ReservationManager::findReservationsByStudent(const string &studentId) const {
-    return active_.filter([studentId](const Reservation& r) {
-        return r.getStudentId() == studentId;
-    });
+    vector<Reservation> all = active_.filter([](const Reservation&) { return true; });
+    vector<int> matches = findReservationIndexesByStudent(all, studentId);
+    vector<Reservation> found;
+    for (int idx : matches) {
+        found.push_back(all[idx]);
+    }
+    return found;
 }
 
 // reorder resources_ by the chosen criteria. The lambda picks the

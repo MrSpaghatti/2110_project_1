@@ -4,6 +4,18 @@ Class: CSCE 2110
 Instructor: Bahareh Dorri
 ================================================================
 
+QUICK START
+----------------------------------------------------------------
+Build:  g++ -std=c++11 -Wall -I include src/*.cpp -o reservation_system
+        (or: make)
+Run:    ./reservation_system          (run from the project root; data/ must exist)
+Try it:
+    1) menu 1  -> view resources with live availability
+    2) menu 2 -> create a reservation (student, resource, date, times)
+    5,8,10    -> display waiting lists / search (by resource, reservation,
+                 or student) / generate reports
+   11         -> quit
+
 1. OVERVIEW
 ----------------------------------------------------------------
 A menu-based CLI app that allows students to reserve campus resources, i.e. study rooms, laptops, tutoring appointments, etc. and lets administrators manage reservations, waiting lists, and cancellations.
@@ -14,6 +26,21 @@ A menu-based CLI app that allows students to reserve campus resources, i.e. stud
 - Matthew Ojeh Jr.
 - Hoang Trung Le
 
+Primary contributions (see section 11 DEVELOPMENT LOG for the dated detail):
+
+- Logan Conrad      : Resource, FileLoader, LinkedList (insert/find/remove/
+                      display/size/hasConflict/quickSort/filter), main menu
+                      loop, D12/D13 rewire (active_ = LinkedList, history_ =
+                      CancellationHistory), ReportGenerator, sorting, and
+                      merge coordination.
+- Matthew Ojeh Jr.  : WaitingList (FIFO queue), ReservationManager redesign,
+                      hand-written linear search (LinearSearch.h/.cpp) +
+                      integration, and fixes for empty waiting list, queue
+                      head-of-line blocking, and report output.
+- Hoang Trung Le    : Reservation, Student, CancellationHistory (stack),
+                      wiring menu create/cancel/undo/display/search, CLI input
+                      hardening, and reservation-slot (date/time) validation.
+
 3. FEATURES (Milestone 1 + Final)
 ----------------------------------------------------------------
 - Load resource and reservation data from files
@@ -21,14 +48,24 @@ A menu-based CLI app that allows students to reserve campus resources, i.e. stud
 - Create reservations (stored in a linked list)
 - Cancel reservations (moved to a cancellation history)
 - Undo the most recent cancellation (stack)
-- Waiting list per resource (FIFO queue)
-- Display waiting lists and cancellation history
-- Search: find a reservation or resource by ID, find all reservations
-  for a student (LinkedList::filter)
+- Waiting list per resource (FIFO queue); on a cancel/undo the manager
+  promotes the first waiter whose requested slot is actually free (skips a
+  blocked front waiter instead of letting the whole line starve)
+- Display waiting lists (prints "No waiting lists." when all queues are
+  empty) and cancellation history
+- Search (menu 8): find a resource by ID, a reservation by ID, and all
+  reservations for a student. Backed by a hand-written LINEAR SEARCH in
+  include/LinearSearch.h + src/LinearSearch.cpp
+  (findResourceIndex / findReservationIndex / findReservationIndexesByStudent).
+  No std::find / std::find_if / std::binary_search in the search path -- the
+  traversal and comparison are our own code. Linear (not binary) because the
+  inventory and active list are in file order, not sorted by ID.
 - Sort: reorder resources by name/type/availability with a hand-written
   quick sort (no std::sort)
-- Reports: active reservations, resource utilization, most-requested
-  resources, waiting-list statistics (ReportGenerator)
+- Reports (menu 10): active reservations (with total count), resource
+  utilization (per-resource bookings + % share of all bookings), most-requested
+  resources, and waiting-list statistics (ReportGenerator). Report output is
+  distinct from the raw menu 1 / menu 7 listings.
 
 4. FILE STRUCTURE
 ----------------------------------------------------------------
@@ -41,6 +78,8 @@ Project1/
 |   |-- LinkedList.h
 |   |-- WaitingList.h
 |   |-- CancellationHistory.h
+|   |-- LinearSearch.h
+|   |-- ReportGenerator.h
 |   `-- ReservationManager.h
 |-- src/
 |   |-- main.cpp
@@ -51,19 +90,38 @@ Project1/
 |   |-- LinkedList.cpp
 |   |-- WaitingList.cpp
 |   |-- CancellationHistory.cpp
+|   |-- LinearSearch.cpp
+|   |-- ReportGenerator.cpp
 |   `-- ReservationManager.cpp
 |-- data/
 |   |-- resources.txt
 |   `-- reservations.txt
+|-- DECISIONS.md          design decisions log (why the code looks like this)
+|-- complexity_analysis.md  Big-O write-up for the graded operations
 |-- README.txt
 `-- Makefile
 
-5. DATA STRUCTURES USED
+5. DATA STRUCTURES & ALGORITHMS USED
 ----------------------------------------------------------------
+Structures:
 - Linked list  : active reservations (frequent insert/delete)
 - Queue        : waiting lists (FIFO fairness)
 - Stack        : cancellation history (undo = LIFO)
 - Vector       : resource inventory (fast traversal/sort)
+
+Hand-written algorithms (no std::find / std::sort):
+- Linear search (include/LinearSearch.h): findResourceIndex,
+  findReservationIndex, findReservationIndexesByStudent. One O(n) walk with
+  direct element access; returns the FIRST match. Backs menu 8.
+- Quick sort (Lomuto partition + comparator lambdas): LinkedList::quickSort
+  for reservations and ReportGenerator::quickSort for most-requested.
+  Average O(n log n), worst O(n^2).
+- Waiting-list promotion: processWaitingList scans the whole queue for the
+  first waiter whose slot is free (not just the front) so a blocked front
+  waiter cannot starve the rest. O(n) per promotion.
+
+See DECISIONS.md for the design rationale (D1-D14) and
+complexity_analysis.md for the full Big-O write-up.
 
 6. COMPILE & RUN
 ----------------------------------------------------------------
@@ -83,7 +141,42 @@ reservation/resource/student, sort resources with a hand-written quick sort,
 and generate utilization/waiting reports.
 Data files must sit in data/.
 
-8. INPUT FILE FORMATS
+8. TESTING / SAMPLE RUN
+----------------------------------------------------------------
+Compile check (clean, no warnings):
+    g++ -std=c++11 -Wall -Wextra -I include src/*.cpp -o reservation_system
+Interactive smoke tests are driven by piping menu choices on stdin. Excerpt
+from a run against the seed data:
+
+    $ ./reservation_system
+    Choice: 5
+    No waiting lists.                      <- empty waiting list message
+
+    Choice: 8
+    --- Search ---
+    1. By resource ID
+    2. By reservation ID
+    3. By student ID
+    Choice: 1
+    Enter resource ID: R101
+    Resource found.                        <- hand-written linear search
+
+    Choice: 10
+    --- Reports ---
+    ...
+    Choice: 4
+    ===== Waiting List Statistics =====
+    Total: 0 students waiting
+
+    Choice: 11
+    Goodbye.
+
+Head-of-line blocking check (R110): book 10:00-11:00 and 11:00-12:00, then
+queue Cara (11:00-12:00) then Dan (10:00-11:00, behind her). Cancel the
+10:00 holder: Dan is promoted even though Cara is still blocked at the front,
+and Cara stays queued. (Before the fix, the front-blocked Cara starved Dan.)
+
+9. INPUT FILE FORMATS
 ----------------------------------------------------------------
 resources.txt line format:
     ResourceID|Name|Type|Availability
@@ -95,7 +188,7 @@ skipped, and lines with the wrong field count are skipped with an error
 printed to stderr. resources.txt Availability column maps 'Available' ->
 true, anything else -> false.
 
-9. KNOWN LIMITATIONS / ASSUMPTIONS
+10. KNOWN LIMITATIONS / ASSUMPTIONS
 ----------------------------------------------------------------
 - Seed data (data/reservations.txt) is date-only; reservations loaded from
   file carry empty start/end times. Empty times mean "no time constraint":
@@ -111,7 +204,7 @@ true, anything else -> false.
 - FileLoader prints an error and returns an empty list if the data file
   cannot be opened or every line fails validation.
 
-10. DEVELOPMENT LOG
+11. DEVELOPMENT LOG
 ----------------------------------------------------------------
 Individual contribution is graded separately per the professor's grading
 note; log work here as it is completed so each member can accurately

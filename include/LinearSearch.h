@@ -1,0 +1,51 @@
+#ifndef LINEARSEARCH_H
+#define LINEARSEARCH_H
+
+#include <string>
+#include <vector>
+#include "Resource.h"
+#include "Reservation.h"
+
+// Hand-written LINEAR SEARCH over the manager's vectors (see D13).
+//
+// Every function here is written out longhand on purpose: the assignment
+// forbids calling a library search (std::find / std::find_if / std::count_if)
+// for the graded feature, so the traversal and the comparison have to be
+// visible in our own code. Returns an INDEX rather than a bool or an iterator
+// because the callers also need to mutate the element they just found.
+//
+// Complexity of all three: O(n) time, O(1) extra space (the by-student variant
+// grows its result vector, but the scan itself is O(1) space per element).
+//
+// Why linear and not binary (the question the spec asks us to be ready for):
+// the inventory and the active-reservation list are stored in FILE order, not
+// sorted by ID, and binary search is only correct on sorted input -- on an
+// unsorted range it can walk past the match and report "not found" for an ID
+// that is really there. Every insert, cancel and undo changes that order, so
+// keeping the vectors sorted would mean re-sorting on each mutation just to
+// make a lookup legal. Linear search needs no such precondition, which is why
+// it is the algorithm this system ships.
+
+// Index of the resource whose ID equals id, or -1 when nothing matches.
+int findResourceIndex(
+    const std::vector<Resource> &resources,
+    const std::string &id
+);
+
+// Index of the reservation whose ID equals reservationId, or -1 when nothing
+// matches. Reservation IDs are unique, so a single index is enough.
+int findReservationIndex(
+    const std::vector<Reservation> &reservations,
+    const std::string &reservationId
+);
+
+// EVERY index whose student ID equals studentId. One student may hold several
+// reservations at once, so the search cannot stop at the first hit -- it walks
+// the whole list and keeps every match. Empty vector means "no reservations
+// for that student".
+std::vector<int> findReservationIndexesByStudent(
+    const std::vector<Reservation> &reservations,
+    const std::string &studentId
+);
+
+#endif

@@ -22,12 +22,13 @@ public:
   // means there's no default constructor.
   explicit ReportGenerator(const ReservationManager &manager);
 
-  // 1: print the active reservation list (same shape as
-  //    displayActiveReservations).
+  // 1: active reservations report - header + the active list + a total
+  //    count summary (distinct from menu 7's raw listing).
   void activeReservationsReport() const;
 
-  // 2: one line per resource: how many active reservations it has
-  //    (active_.countFor(id)) plus its Available/Unavailable status.
+  // 2: one line per resource: id/name, how many active bookings it has
+  //    (active_.countFor(id)) and that count's % share of all bookings,
+  //    plus a grand total. Distinct from menu 1 (live status view).
   void utilizationReport() const;
 
   // 3: count reservations per resourceId, sort the (resourceId, count)

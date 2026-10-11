@@ -1,0 +1,47 @@
+#include "LinearSearch.h"
+
+using namespace std;
+
+// The algorithm in full: start at the front, test exactly one element, return
+// as soon as the ID matches, otherwise step forward by one and try again.
+// Falling off the end of the vector means the key is absent -> -1. No library
+// search is involved, which is the point of the exercise.
+int findResourceIndex(const vector<Resource> &resources, const string &id) {
+  for (int i = 0; i < static_cast<int>(resources.size()); ++i) {
+    if (resources[i].getId() == id) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+// Same traversal against the active-reservation list. The comparison goes
+// through getReservationId() so the search never touches private fields.
+int findReservationIndex(
+    const vector<Reservation> &reservations,
+    const string &reservationId
+) {
+  for (int i = 0; i < static_cast<int>(reservations.size()); ++i) {
+    if (reservations[i].getReservationId() == reservationId) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+// Collect-all variant: identical step-by-step scan, except a match is recorded
+// and the walk CONTINUES instead of returning, because a student can hold more
+// than one reservation. Running the full list is what makes this O(n) with no
+// early exit.
+vector<int> findReservationIndexesByStudent(
+    const vector<Reservation> &reservations,
+    const string &studentId
+) {
+  vector<int> matches;
+  for (int i = 0; i < static_cast<int>(reservations.size()); ++i) {
+    if (reservations[i].getStudentId() == studentId) {
+      matches.push_back(i);
+    }
+  }
+  return matches;
+}
