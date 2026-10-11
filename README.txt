@@ -21,8 +21,11 @@ A menu-based CLI app that allows students to reserve campus resources, i.e. stud
 - Create reservations (stored in a linked list)
 - Cancel reservations (moved to a cancellation history)
 - Undo the most recent cancellation (stack)
-- Waiting list per resource (FIFO queue)
-- Display waiting lists and cancellation history
+- Waiting list per resource (FIFO queue); on a cancel/undo the manager
+  promotes the first waiter whose requested slot is actually free (skips a
+  blocked front waiter instead of letting the whole line starve)
+- Display waiting lists (prints "No waiting lists." when all queues are
+  empty) and cancellation history
 - Search (menu 8): find a resource by ID, a reservation by ID, and all
   reservations for a student. Backed by a hand-written LINEAR SEARCH in
   include/LinearSearch.h + src/LinearSearch.cpp
@@ -32,8 +35,10 @@ A menu-based CLI app that allows students to reserve campus resources, i.e. stud
   inventory and active list are in file order, not sorted by ID.
 - Sort: reorder resources by name/type/availability with a hand-written
   quick sort (no std::sort)
-- Reports: active reservations, resource utilization, most-requested
-  resources, waiting-list statistics (ReportGenerator)
+- Reports (menu 10): active reservations (with total count), resource
+  utilization (per-resource bookings + % share of all bookings), most-requested
+  resources, and waiting-list statistics (ReportGenerator). Report output is
+  distinct from the raw menu 1 / menu 7 listings.
 
 4. FILE STRUCTURE
 ----------------------------------------------------------------
