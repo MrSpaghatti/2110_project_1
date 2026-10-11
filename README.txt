@@ -25,6 +25,10 @@ A menu-based CLI app that allows students to reserve campus resources, i.e. stud
 - Display waiting lists and cancellation history
 - Search: find a reservation or resource by ID, find all reservations
   for a student (LinkedList::filter)
+- Hand-written LINEAR SEARCH (include/LinearSearch.h, src/LinearSearch.cpp):
+  findResourceIndex, findReservationIndex, findReservationIndexesByStudent.
+  No std::find / std::find_if / std::binary_search in the search path; the
+  algorithm is implemented, not called. Menu 7/8/9 wire it into the CLI.
 - Sort: reorder resources by name/type/availability with a hand-written
   quick sort (no std::sort)
 - Reports: active reservations, resource utilization, most-requested
