@@ -178,20 +178,13 @@ bool ReservationManager::createReservation(
 
     // 1. Resource must exist.
     bool found = false;
-    bool available = false;
     for (const auto& r : resources_) {
         if (r.getId() == resourceId) {
             found = true;
-            available = r.isAvailable();
             break;
         }
     }
     if (!found) {
-        return false;
-    }
-
-    if (!available) {
-        addToWaitingList(studentId, studentName, resourceId, date, startTime, endTime);
         return false;
     }
 
@@ -238,6 +231,15 @@ bool ReservationManager::undoCancellation() {
   }
   Reservation* last = history_.top();
   Reservation lastCopy = *last;
+
+  if (waitingQueues_[lastCopy.getResourceId()].isEmpty() &&
+      active_.hasConflict(lastCopy.getResourceId(), lastCopy.getDate(),
+                          lastCopy.getStartTime(), lastCopy.getEndTime())) {
+    cout << "Cannot undo cancellation: the reservation slot has since been booked."
+         << endl;
+    return false;
+  }
+
   history_.pop();
   if (!waitingQueues_[lastCopy.getResourceId()].isEmpty()) {
     processWaitingList(lastCopy.getResourceId());
