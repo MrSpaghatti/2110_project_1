@@ -4,6 +4,18 @@ Class: CSCE 2110
 Instructor: Bahareh Dorri
 ================================================================
 
+QUICK START
+----------------------------------------------------------------
+Build:  g++ -std=c++11 -Wall -I include src/*.cpp -o reservation_system
+        (or: make)
+Run:    ./reservation_system          (run from the project root; data/ must exist)
+Try it:
+    1) menu 1  -> view resources with live availability
+    2) menu 2 -> create a reservation (student, resource, date, times)
+    5,8,10    -> display waiting lists / search (by resource, reservation,
+                 or student) / generate reports
+   11         -> quit
+
 1. OVERVIEW
 ----------------------------------------------------------------
 A menu-based CLI app that allows students to reserve campus resources, i.e. study rooms, laptops, tutoring appointments, etc. and lets administrators manage reservations, waiting lists, and cancellations.
@@ -13,6 +25,21 @@ A menu-based CLI app that allows students to reserve campus resources, i.e. stud
 - Logan Conrad
 - Matthew Ojeh Jr.
 - Hoang Trung Le
+
+Primary contributions (see section 11 DEVELOPMENT LOG for the dated detail):
+
+- Logan Conrad      : Resource, FileLoader, LinkedList (insert/find/remove/
+                      display/size/hasConflict/quickSort/filter), main menu
+                      loop, D12/D13 rewire (active_ = LinkedList, history_ =
+                      CancellationHistory), ReportGenerator, sorting, and
+                      merge coordination.
+- Matthew Ojeh Jr.  : WaitingList (FIFO queue), ReservationManager redesign,
+                      hand-written linear search (LinearSearch.h/.cpp) +
+                      integration, and fixes for empty waiting list, queue
+                      head-of-line blocking, and report output.
+- Hoang Trung Le    : Reservation, Student, CancellationHistory (stack),
+                      wiring menu create/cancel/undo/display/search, CLI input
+                      hardening, and reservation-slot (date/time) validation.
 
 3. FEATURES (Milestone 1 + Final)
 ----------------------------------------------------------------
@@ -114,7 +141,42 @@ reservation/resource/student, sort resources with a hand-written quick sort,
 and generate utilization/waiting reports.
 Data files must sit in data/.
 
-8. INPUT FILE FORMATS
+8. TESTING / SAMPLE RUN
+----------------------------------------------------------------
+Compile check (clean, no warnings):
+    g++ -std=c++11 -Wall -Wextra -I include src/*.cpp -o reservation_system
+Interactive smoke tests are driven by piping menu choices on stdin. Excerpt
+from a run against the seed data:
+
+    $ ./reservation_system
+    Choice: 5
+    No waiting lists.                      <- empty waiting list message
+
+    Choice: 8
+    --- Search ---
+    1. By resource ID
+    2. By reservation ID
+    3. By student ID
+    Choice: 1
+    Enter resource ID: R101
+    Resource found.                        <- hand-written linear search
+
+    Choice: 10
+    --- Reports ---
+    ...
+    Choice: 4
+    ===== Waiting List Statistics =====
+    Total: 0 students waiting
+
+    Choice: 11
+    Goodbye.
+
+Head-of-line blocking check (R110): book 10:00-11:00 and 11:00-12:00, then
+queue Cara (11:00-12:00) then Dan (10:00-11:00, behind her). Cancel the
+10:00 holder: Dan is promoted even though Cara is still blocked at the front,
+and Cara stays queued. (Before the fix, the front-blocked Cara starved Dan.)
+
+9. INPUT FILE FORMATS
 ----------------------------------------------------------------
 resources.txt line format:
     ResourceID|Name|Type|Availability
@@ -126,7 +188,7 @@ skipped, and lines with the wrong field count are skipped with an error
 printed to stderr. resources.txt Availability column maps 'Available' ->
 true, anything else -> false.
 
-9. KNOWN LIMITATIONS / ASSUMPTIONS
+10. KNOWN LIMITATIONS / ASSUMPTIONS
 ----------------------------------------------------------------
 - Seed data (data/reservations.txt) is date-only; reservations loaded from
   file carry empty start/end times. Empty times mean "no time constraint":
@@ -142,7 +204,7 @@ true, anything else -> false.
 - FileLoader prints an error and returns an empty list if the data file
   cannot be opened or every line fails validation.
 
-10. DEVELOPMENT LOG
+11. DEVELOPMENT LOG
 ----------------------------------------------------------------
 Individual contribution is graded separately per the professor's grading
 note; log work here as it is completed so each member can accurately
@@ -187,7 +249,7 @@ format: date | member | work done | verified by
 2026-10-07 | [Hoang Trung Le] | Added reservation-slot validation for calendar dates and paired 24-hour times; rejects malformed, reversed, and incomplete time ranges before they can be booked or queued  
 2026-10-11 | [matthew] | Searching: implemented hand-written linear search (include/LinearSearch.h + src/LinearSearch.cpp: findResourceIndex, findReservationIndex, findReservationIndexesByStudent) and integrated it into ReservationManager (findResource, findReservation, findReservationsByStudent) so menu 8 searches run through our own algorithm, not std::find | g++ -std=c++11 -Wall -Wextra build clean; smoke runs (search R101 -> found, reservation 301 -> found, student 1001 -> 1 hit, unknown id -> not found)
 2026-10-11 | [matthew] | Fixes: (1) displayWaitingLists prints "No waiting lists." when all queues empty; (2) processWaitingList scans the whole queue for the first free slot (head-of-line blocking fix) instead of only the front; (3) Reports now give real report output (active-reservations total summary; utilization shows booking share %) so submenu 10 no longer duplicates menu 7 / menu 1 | g++ -std=c++11 -Wall -Wextra build clean; smoke runs (menu 5 empty -> "No waiting lists."; R110 queue: cancel 10:00 holder while 11:00 waiter still blocks -> 10:00 waiter promoted, 11:00 waiter stays queued; reports 1/2 show summaries)
-11. GITHUB REPOSITORY
+12. GITHUB REPOSITORY
 ----------------------------------------------------------------
     https://github.com/MrSpaghatti/2110_project_1
 
