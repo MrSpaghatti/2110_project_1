@@ -5,6 +5,7 @@
 #include "FileLoader.h"
 #include "ReservationManager.h"
 #include "ReportGenerator.h"
+#include "Student.h"
 using namespace std;
 
 enum class InputStatus {
@@ -87,9 +88,24 @@ int main() {
                 string startTime;
                 string endTime;
 
-                if (!readLine("Enter student ID: ", studentId) ||
-                    !readLine("Enter student name: ", studentName) ||
-                    !readLine("Enter resource ID: ", resourceId) ||
+                if (!readLine("Enter student ID: ", studentId)) {
+                    return 0;
+                }
+                if (!Student::isValidId(studentId)) {
+                    cout << "Warning: Student ID must contain digits only." << endl;
+                    break;
+                }
+
+                if (!readLine("Enter student name: ", studentName)) {
+                    return 0;
+                }
+                if (!Student::isValidName(studentName)) {
+                    cout << "Warning: Student name must contain at least one letter "
+                            "and must not contain numbers." << endl;
+                    break;
+                }
+
+                if (!readLine("Enter resource ID: ", resourceId) ||
                     !readLine("Enter date (MM/DD/YYYY, 0 for none): ", date) ||
                     !readLine("Enter start time (HH:MM, 0 for none): ", startTime) ||
                     !readLine("Enter end time (HH:MM, 0 for none): ", endTime)) {
