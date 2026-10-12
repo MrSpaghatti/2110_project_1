@@ -21,6 +21,10 @@ public:
     // Constructor for creating a student with an ID and name
     Student(const std::string &id, const std::string &name);
 
+    // Validate student information before it is used in a reservation.
+    static bool isValidId(const std::string &id);
+    static bool isValidName(const std::string &name);
+
     // Get student information
     std::string getId() const;
     std::string getName() const;

@@ -1,5 +1,6 @@
 #include "ReservationManager.h"
 #include "FileLoader.h"
+#include "Student.h"
 #include "LinearSearch.h"
 #include <algorithm>
 #include <ctime>
@@ -172,6 +173,10 @@ bool ReservationManager::createReservation(
     const string &startTime,
     const string &endTime
 ) {
+    if (!Student::isValidId(studentId) || !Student::isValidName(studentName)) {
+        return false;
+    }
+
     if (!validateReservationSlot(date, startTime, endTime).empty()) {
         return false;
     }

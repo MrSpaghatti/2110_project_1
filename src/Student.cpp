@@ -8,6 +8,7 @@
  */
 
 #include "Student.h"
+#include <cctype>
 #include <iostream>
 
 // Default constructor
@@ -22,6 +23,33 @@ Student::Student(const std::string &id, const std::string &name)
     : id_(id), name_(name)
 {
     // Members assigned using member initializer list above
+}
+
+bool Student::isValidId(const std::string &id)
+{
+    if (id.empty()) {
+        return false;
+    }
+    for (unsigned char character : id) {
+        if (!std::isdigit(character)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool Student::isValidName(const std::string &name)
+{
+    bool containsLetter = false;
+    for (unsigned char character : name) {
+        if (std::isdigit(character)) {
+            return false;
+        }
+        if (std::isalpha(character)) {
+            containsLetter = true;
+        }
+    }
+    return containsLetter;
 }
 
 // getId()
