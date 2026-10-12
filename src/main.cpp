@@ -14,6 +14,15 @@ enum class InputStatus {
     End
 };
 
+
+void toUpper(string &value){ // in-place: 'a'-'z' -> 'A'-'Z', rest unchanged
+    for (size_t i = 0; i < value.size(); ++i){
+        if (value[i] >= 'a' && value[i] <= 'z'){
+            value[i] = value[i] - 'a' + 'A';
+        }
+    }
+}
+
 bool readLine(const string &prompt, string &value) {
     cout << prompt;
     if (!getline(cin, value)) {
@@ -111,6 +120,7 @@ int main() {
                     !readLine("Enter end time (HH:MM, 0 for none): ", endTime)) {
                     return 0;
                 }
+                toUpper(resourceId);
 
                 // "0" means no time constraint.
                 if (date == "0") date = "";
@@ -186,6 +196,7 @@ int main() {
                 string id;
                 if (searchChoice == 1) {
                     if (!readLine("Enter resource ID: ", id)) return 0;
+                    toUpper(id);
                     cout << (manager.findResource(id) ? "Resource found." :
                                                         "Resource not found.") << endl;
                 } else if (searchChoice == 2) {
